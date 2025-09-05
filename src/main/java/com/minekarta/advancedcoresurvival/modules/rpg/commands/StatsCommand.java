@@ -41,6 +41,8 @@ public class StatsCommand implements CommandExecutor {
         player.sendMessage(ChatColor.GRAY + " - Agility: " + ChatColor.WHITE + stats.getAgility());
         player.sendMessage(ChatColor.GRAY + " - Endurance: " + ChatColor.WHITE + stats.getEndurance());
         player.sendMessage("");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "Skill Points: " + ChatColor.WHITE + stats.getSkillPoints());
+        player.sendMessage("");
         player.sendMessage(ChatColor.GREEN + "Skills:");
         stats.getSkillLevels().forEach((skill, level) -> {
             player.sendMessage(ChatColor.GRAY + " - " + skill + ": " + ChatColor.WHITE + level);

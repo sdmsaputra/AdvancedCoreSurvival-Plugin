@@ -104,6 +104,8 @@ rpg:
     # How much harder each level gets. 1.2 means 20% harder than the last.
     # Set to 1.0 for linear progression (same exp for every level).
     exp-multiplier: 1.2
+    # The number of skill points awarded to a player each time they level up.
+    skill-points-per-level: 1
     # --- Messages ---
     # Message sent to the player when they level up.
     # Placeholders: %player_name%, %new_level%
@@ -112,3 +114,18 @@ rpg:
     # Placeholders: %gained_exp%, %current_exp%, %required_exp%, %exp_bar%
     # Set to "" to disable.
     exp-gain-action-bar: "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%"
+  stats:
+    # The bonus damage applied per point of Strength.
+    damage-per-strength: 0.5
+    # The chance to dodge an attack per point of Agility (0.01 = 1%).
+    dodge-chance-per-agility: 0.005
+    # The amount of extra health (in half hearts) per point of Endurance.
+    health-per-endurance: 1.0
+  exp-rewards:
+    combat:
+      ZOMBIE: 10.0
+      SKELETON: 10.0
+      SPIDER: 8.0
+      CREEPER: 15.0
+      ENDERMAN: 20.0
+      BLAZE: 25.0

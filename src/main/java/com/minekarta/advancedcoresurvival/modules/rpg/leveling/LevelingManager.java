@@ -12,6 +12,7 @@ public class LevelingManager {
     private final PlayerStatsManager statsManager;
     private final double baseExp;
     private final double expMultiplier;
+    private final int skillPointsPerLevel;
     private final String levelUpMessage;
     private final String expGainActionBar;
 
@@ -21,6 +22,7 @@ public class LevelingManager {
         // Load settings from config
         this.baseExp = config.getDouble("rpg.leveling.base-exp", 1000.0);
         this.expMultiplier = config.getDouble("rpg.leveling.exp-multiplier", 1.2);
+        this.skillPointsPerLevel = config.getInt("rpg.leveling.skill-points-per-level", 1);
         this.levelUpMessage = config.getString("rpg.leveling.level-up-message", "&a&lCongratulations, %player_name%! You have reached Level %new_level%!");
         this.expGainActionBar = config.getString("rpg.leveling.exp-gain-action-bar", "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%");
     }
@@ -54,6 +56,7 @@ public class LevelingManager {
         while (stats.getExp() >= requiredExp) {
             // Level up!
             stats.setLevel(stats.getLevel() + 1);
+            stats.addSkillPoints(skillPointsPerLevel);
             stats.setExp(stats.getExp() - requiredExp);
 
             // Send level up message

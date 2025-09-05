@@ -17,6 +17,7 @@ public class PlayerStats {
     private int strength;
     private int agility;
     private int endurance;
+    private int skillPoints;
 
     // Player skills, represented as a map of skill name to skill level
     private final Map<String, Integer> skillLevels;
@@ -33,6 +34,7 @@ public class PlayerStats {
         this.strength = 5;
         this.agility = 5;
         this.endurance = 5;
+        this.skillPoints = 0;
         this.skillLevels = new HashMap<>();
         // Initialize default skills
         this.skillLevels.put("MINING", 1);
@@ -88,6 +90,18 @@ public class PlayerStats {
 
     public void setEndurance(int endurance) {
         this.endurance = endurance;
+    }
+
+    public int getSkillPoints() {
+        return skillPoints;
+    }
+
+    public void setSkillPoints(int skillPoints) {
+        this.skillPoints = skillPoints;
+    }
+
+    public void addSkillPoints(int amount) {
+        this.skillPoints += amount;
     }
 
     public Map<String, Integer> getSkillLevels() {
