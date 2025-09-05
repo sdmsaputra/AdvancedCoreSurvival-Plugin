@@ -22,6 +22,8 @@ public class PlayerConnectionListener implements Listener {
         // Asynchronously load the player's stats into the cache.
         // The getPlayerStats method in the manager handles the initial loading.
         statsManager.getPlayerStats(event.getPlayer());
+        // Update their health based on their stats
+        statsManager.updatePlayerHealth(event.getPlayer());
     }
 
     @EventHandler

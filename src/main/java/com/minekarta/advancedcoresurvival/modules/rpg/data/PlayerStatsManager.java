@@ -1,8 +1,10 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.data;
 
+import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayerStatsManager {
 
     private final Map<UUID, PlayerStats> statsCache = new ConcurrentHashMap<>();
+    private final double healthPerEndurance;
+
+    public PlayerStatsManager(FileConfiguration config) {
+        this.healthPerEndurance = config.getDouble("rpg.stats.health-per-endurance", 1.0);
+    }
 
     /**
      * Retrieves the stats for a given player from the cache.
@@ -51,6 +58,13 @@ public class PlayerStatsManager {
         // For now, we just create fresh stats.
         PlayerStats newStats = new PlayerStats(uuid);
         statsCache.put(uuid, newStats);
+
+        // Apply health bonus if the player is online
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            updatePlayerHealth(player);
+        }
+
         return newStats;
     }
 
@@ -79,4 +93,16 @@ public class PlayerStatsManager {
         statsCache.remove(uuid);
     }
 
+    /**
+     * Updates a player's max health based on their Endurance stat.
+     * @param player The player to update.
+     */
+    public void updatePlayerHealth(Player player) {
+        PlayerStats stats = getPlayerStats(player);
+        if (stats == null) return;
+
+        // Minecraft's default health is 20. We add bonus health from endurance.
+        double bonusHealth = stats.getEndurance() * healthPerEndurance;
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20.0 + bonusHealth);
+    }
 }
