@@ -38,6 +38,7 @@ public class ModuleManager {
      */
     public void registerModules() {
         // This is where all module classes will be instantiated and added to the list.
+        modules.add(new com.minekarta.advancedcoresurvival.modules.rpg.RPGModule());
         modules.add(new com.minekarta.advancedcoresurvival.modules.essentials.EssentialsModule());
         modules.add(new com.minekarta.advancedcoresurvival.modules.economy.EconomyModule());
         modules.add(new com.minekarta.advancedcoresurvival.modules.claims.ClaimsModule());
