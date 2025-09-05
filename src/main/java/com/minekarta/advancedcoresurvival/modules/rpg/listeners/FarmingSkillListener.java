@@ -4,6 +4,7 @@ import com.minekarta.advancedcoresurvival.modules.rpg.leveling.LevelingManager;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,36 +14,26 @@ import org.bukkit.event.block.BlockBreakEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Listener for mining-related actions to grant EXP.
- */
-public class MiningSkillListener implements Listener {
+public class FarmingSkillListener implements Listener {
 
     private final LevelingManager levelingManager;
     private final Map<Material, Double> expValues = new HashMap<>();
 
-    public MiningSkillListener(LevelingManager levelingManager) {
+    public FarmingSkillListener(LevelingManager levelingManager) {
         this.levelingManager = levelingManager;
-        // Define EXP values for different blocks
-        expValues.put(Material.COAL_ORE, 5.0);
-        expValues.put(Material.IRON_ORE, 10.0);
-        expValues.put(Material.GOLD_ORE, 15.0);
-        expValues.put(Material.DIAMOND_ORE, 25.0);
-        expValues.put(Material.EMERALD_ORE, 30.0);
-        expValues.put(Material.LAPIS_ORE, 8.0);
-        expValues.put(Material.REDSTONE_ORE, 8.0);
-        expValues.put(Material.NETHER_QUARTZ_ORE, 7.0);
-        expValues.put(Material.STONE, 0.5);
-        expValues.put(Material.ANDESITE, 0.5);
-        expValues.put(Material.DIORITE, 0.5);
-        expValues.put(Material.GRANITE, 0.5);
+        // Define EXP values for different crops
+        expValues.put(Material.WHEAT, 4.0);
+        expValues.put(Material.CARROTS, 4.0);
+        expValues.put(Material.POTATOES, 4.0);
+        expValues.put(Material.BEETROOTS, 4.0);
+        expValues.put(Material.NETHER_WART, 5.0);
+        expValues.put(Material.PUMPKIN, 8.0);
+        expValues.put(Material.MELON, 8.0);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-
-        // Only grant EXP if the player is in survival mode
         if (player.getGameMode() != GameMode.SURVIVAL) {
             return;
         }
@@ -51,6 +42,16 @@ public class MiningSkillListener implements Listener {
         double expToGrant = expValues.getOrDefault(block.getType(), 0.0);
 
         if (expToGrant > 0) {
+            // For ageable crops, only grant EXP if they are fully grown
+            if (block.getBlockData() instanceof Ageable) {
+                Ageable ageable = (Ageable) block.getBlockData();
+                if (ageable.getAge() != ageable.getMaximumAge()) {
+                    return; // Not fully grown, no EXP
+                }
+            }
+
+            // For pumpkins and melons, they are not ageable, so they grant EXP directly.
+
             levelingManager.onExpGain(player, expToGrant);
         }
     }
