@@ -95,3 +95,20 @@ claims:
       pvp: false
       fire-spread: false
       mob-griefing: false
+
+rpg:
+  leveling:
+    # The formula used is: required_exp_for_next_level = base-exp * (multiplier ^ (current_level - 1))
+    # Example: To get from level 1 to 2, you need 'base-exp'. To get from 2 to 3, you need 'base-exp * multiplier'.
+    base-exp: 1000
+    # How much harder each level gets. 1.2 means 20% harder than the last.
+    # Set to 1.0 for linear progression (same exp for every level).
+    exp-multiplier: 1.2
+    # --- Messages ---
+    # Message sent to the player when they level up.
+    # Placeholders: %player_name%, %new_level%
+    level-up-message: "&a&lCongratulations, %player_name%! You have reached Level %new_level%!"
+    # Message shown in the action bar when a player gains EXP.
+    # Placeholders: %gained_exp%, %current_exp%, %required_exp%, %exp_bar%
+    # Set to "" to disable.
+    exp-gain-action-bar: "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%"
