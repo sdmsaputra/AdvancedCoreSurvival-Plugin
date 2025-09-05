@@ -1,0 +1,171 @@
+name: ${project.name}
+main: com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival
+version: ${project.version}
+api-version: "1.21"
+author: Minekarta Studio
+description: ${project.description}
+website: https://github.com/Minekarta-Studio/AdvancedCoreSurvival
+softdepend:
+  - Vault
+  - PlaceholderAPI
+  - Essentials
+  - CMI
+  - GriefPrevention
+  - Lands
+  - WorldGuard
+  - Factions
+  - RedProtect
+
+commands:
+  advancedcoresurvival:
+    description: Main admin command for AdvancedCoreSurvival.
+    aliases: [acs]
+    permission: advancedcoresurvival.admin
+    usage: /<command> <reload|debug|about>
+  claim:
+    description: Main command for claims.
+    permission: advancedcoresurvival.claim.base
+    usage: /<command> <create|delete|trust|untrust|info|flags>
+  home:
+    description: Teleport to one of your homes.
+    permission: advancedcoresurvival.essentials.home
+    usage: /<command> [name]
+  sethome:
+    description: Set a new home.
+    permission: advancedcoresurvival.essentials.sethome
+    usage: /<command> <name>
+  delhome:
+    description: Delete one of your homes.
+    permission: advancedcoresurvival.essentials.delhome
+    usage: /<command> <name>
+  spawn:
+    description: Teleport to the server spawn.
+    permission: advancedcoresurvival.essentials.spawn
+  setspawn:
+    description: Set the server spawn location.
+    permission: advancedcoresurvival.essentials.setspawn
+  tpa:
+    description: Request to teleport to another player.
+    permission: advancedcoresurvival.essentials.tpa
+    usage: /<command> <player>
+  tpaccept:
+    description: Accept a teleport request.
+    permission: advancedcoresurvival.essentials.tpaccept
+  tpdeny:
+    description: Deny a teleport request.
+    permission: advancedcoresurvival.essentials.tpdeny
+  back:
+    description: Return to your previous location.
+    permission: advancedcoresurvival.essentials.back
+  balance:
+    description: Check your balance.
+    aliases: [bal]
+    permission: advancedcoresurvival.economy.balance
+  pay:
+    description: Pay another player.
+    permission: advancedcoresurvival.economy.pay
+    usage: /<command> <player> <amount>
+  baltop:
+    description: View the richest players.
+    aliases: [balancetop]
+    permission: advancedcoresurvival.economy.baltop
+  ah:
+    description: Open the Auction House.
+    permission: advancedcoresurvival.economy.auctionhouse
+    usage: /<command> [sell|list|cancel]
+  adminshop:
+    description: Open the Admin Shop.
+    aliases: [ashop]
+    permission: advancedcoresurvival.economy.adminshop
+  rpg:
+    description: View your RPG stats and skills.
+    permission: advancedcoresurvival.rpg.base
+  class:
+    description: View your class and abilities.
+    permission: advancedcoresurvival.mmorpg.base
+  ability:
+    description: Use one of your abilities.
+    permission: advancedcoresurvival.mmorpg.ability.base
+  party:
+    description: Manage your party.
+    permission: advancedcoresurvival.party.base
+  pchat:
+    description: Send a message to your party.
+    aliases: [pc]
+    permission: advancedcoresurvival.party.chat
+  team:
+    description: Manage your team.
+    permission: advancedcoresurvival.team.base
+
+permissions:
+  advancedcoresurvival.*:
+    description: Grants access to all AdvancedCoreSurvival commands and features.
+    default: op
+  advancedcoresurvival.admin:
+    description: Access to admin commands like /acs reload.
+    default: op
+  advancedcoresurvival.claim.*:
+    description: Grants access to all claim features.
+    default: op
+    children:
+      advancedcoresurvival.claim.base: true
+      advancedcoresurvival.claim.create: true
+      advancedcoresurvival.claim.delete: true
+      advancedcoresurvival.claim.trust: true
+      advancedcoresurvival.claim.untrust: true
+      advancedcoresurvival.claim.info: true
+      advancedcoresurvival.claim.flags: true
+  advancedcoresurvival.claim.base:
+    description: Base permission for the /claim command.
+    default: true
+  advancedcoresurvival.essentials.*:
+    description: Grants access to all essential commands.
+    default: true
+  advancedcoresurvival.essentials.setspawn:
+    description: Allows setting the server spawn.
+    default: op
+  advancedcoresurvival.economy.*:
+    description: Grants access to all economy features.
+    default: true
+    children:
+      advancedcoresurvival.economy.balance: true
+      advancedcoresurvival.economy.balance.others: op
+      advancedcoresurvival.economy.pay: true
+      advancedcoresurvival.economy.baltop: true
+      advancedcoresurvival.economy.adminshop: true
+  advancedcoresurvival.economy.balance:
+    description: Allows a player to check their own balance.
+    default: true
+  advancedcoresurvival.economy.balance.others:
+    description: Allows a player to check other players' balances.
+    default: op
+  advancedcoresurvival.economy.adminshop:
+    description: Allows access to the admin shop.
+    default: true
+  advancedcoresurvival.rpg.*:
+    description: Grants access to all RPG features.
+    default: true
+  advancedcoresurvival.rpg.base:
+    description: Base permission for the /rpg command.
+    default: true
+  advancedcoresurvival.mmorpg.*:
+    description: Grants access to all MMORPG features.
+    default: true
+  advancedcoresurvival.mmorpg.base:
+    description: Base permission for the /class command.
+    default: true
+  advancedcoresurvival.mmorpg.ability.base:
+    description: Base permission for the /ability command.
+    default: true
+  advancedcoresurvival.party.*:
+    description: Grants access to all party features.
+    default: true
+  advancedcoresurvival.party.base:
+    description: Base permission for the /party command.
+    default: true
+  advancedcoresurvival.team.*:
+    description: Grants access to all team features.
+    default: true
+  advancedcoresurvival.team.base:
+    description: Base permission for the /team command.
+    default: true

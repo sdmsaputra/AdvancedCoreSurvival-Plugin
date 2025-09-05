@@ -1,0 +1,97 @@
+# AdvancedCoreSurvival - Main Configuration
+# For detailed documentation on each option, please visit the project wiki.
+
+# --- Module Control ---
+# Enable or disable entire features of the plugin here.
+# If a module is disabled, all related commands, permissions, and features will be turned off.
+modules:
+  claims: true
+  essentials-integration: true
+  cmi-integration: true
+  survival-essentials: true
+  economy: true
+  auction-house: true
+  player-shops: true
+  admin-shops: true
+  rpg: true
+  mmorpg: true
+  party: true
+  team: true
+  placeholderapi: true
+
+# --- Integration Settings ---
+integration:
+  # The priority order for hooks when multiple plugins providing similar features (like homes, spawn) are present.
+  # The plugin will try to use the first one in the list that is available on the server.
+  # Supported: "cmi", "essentials", "internal"
+  priority: "cmi,essentials,internal"
+
+  essentialsx:
+    enabled: true
+    # If true, ACS will try to take over commands like /home, even if EssentialsX is present.
+    override-commands: false
+    use-economy: true
+    use-homes: true
+    use-spawn: true
+  cmi:
+    enabled: true
+    override-commands: false
+    use-economy: true
+    use-homes: true
+    use-spawn: true
+
+# --- Data Storage ---
+storage:
+  # The type of storage to use for all plugin data.
+  # Supported: "sqlite", "mysql" (YAML is not recommended for production).
+  type: sqlite
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "advancedcoresurvival"
+    username: "root"
+    password: ""
+    pool-size: 10
+
+# --- General Settings ---
+# The default language for plugin messages. Corresponds to a file in the 'languages' folder.
+# e.g., "en_US" will load 'messages_en_US.yml'.
+locale: "en_US"
+
+# Enable this to see detailed debugging information in the console.
+# This can be very spammy and is not recommended for production servers.
+debug: false
+
+# --- Module-Specific Settings ---
+
+essentials:
+  max-homes: 3
+  allow-bed-home: true
+  tpa:
+    cooldown: 30
+    expire: 60
+  back:
+    enabled: true
+
+economy:
+  mode: internal    # internal | vault
+  starting-balance: 1000
+  currency-symbol: "$"
+  pay:
+    enabled: true
+    min-amount: 1
+    tax-percent: 0
+  baltop:
+    limit: 10
+
+claims:
+  # The provider for land claiming. "internal" uses the built-in system.
+  # Other options could be: griefprevention, lands, worldguard, etc.
+  provider: "internal"
+  internal:
+    max-claims-per-player: 3
+    # tax-per-day: 0 # Not implemented yet
+    flags:
+      pvp: false
+      fire-spread: false
+      mob-griefing: false
