@@ -10,6 +10,7 @@ import java.util.UUID;
 public class PlayerStats {
 
     private final UUID playerUUID;
+    private String playerClass; // e.g., "warrior", "mage"
     private int level;
     private double exp;
 
@@ -18,9 +19,14 @@ public class PlayerStats {
     private int agility;
     private int endurance;
     private int skillPoints;
+    private double mana;
+    private double maxMana;
 
     // Player skills, represented as a map of skill name to skill level
     private final Map<String, Integer> skillLevels;
+
+    // A map to store calculated bonuses from skills, e.g., "SWORD_DAMAGE_BONUS" -> 0.1
+    private final Map<String, Double> statBonuses;
 
     /**
      * Constructor for a new player's stats.
@@ -29,23 +35,68 @@ public class PlayerStats {
      */
     public PlayerStats(UUID playerUUID) {
         this.playerUUID = playerUUID;
+        this.playerClass = null; // Player starts without a class
         this.level = 1;
         this.exp = 0;
         this.strength = 5;
         this.agility = 5;
         this.endurance = 5;
         this.skillPoints = 0;
+        this.maxMana = 100.0;
+        this.mana = this.maxMana;
         this.skillLevels = new HashMap<>();
+        this.statBonuses = new HashMap<>();
         // Initialize default skills
         this.skillLevels.put("MINING", 1);
         this.skillLevels.put("FARMING", 1);
         this.skillLevels.put("WOODCUTTING", 1);
     }
 
+    // --- Bonus Management ---
+
+    /**
+     * Gets the calculated bonus value for a specific stat.
+     * @param stat The name of the stat bonus (e.g., "SWORD_DAMAGE_BONUS").
+     * @return The total bonus value, or 0.0 if none.
+     */
+    public double getStatBonus(String stat) {
+        return statBonuses.getOrDefault(stat.toUpperCase(), 0.0);
+    }
+
+    /**
+     * Recalculates all stat bonuses based on the player's current skill levels.
+     * This should be called whenever a skill level changes.
+     * @param skillManager The manager that holds all skill definitions.
+     */
+    public void recalculateStatBonuses(com.minekarta.advancedcoresurvival.modules.rpg.skills.SkillManager skillManager) {
+        statBonuses.clear();
+        if (skillManager == null) return;
+
+        for (Map.Entry<String, Integer> entry : skillLevels.entrySet()) {
+            String skillId = entry.getKey();
+            int level = entry.getValue();
+            com.minekarta.advancedcoresurvival.modules.rpg.skills.Skill skill = skillManager.getSkill(skillId);
+
+            if (skill != null && skill.getType().equalsIgnoreCase("PASSIVE")) {
+                double currentBonus = statBonuses.getOrDefault(skill.getStat(), 0.0);
+                statBonuses.put(skill.getStat(), currentBonus + (skill.getValue() * level));
+            }
+        }
+    }
+
+
     // --- Getters and Setters ---
 
     public UUID getPlayerUUID() {
         return playerUUID;
+    }
+
+    public String getPlayerClass() {
+        return playerClass;
+    }
+
+    public void setPlayerClass(String playerClass) {
+        this.playerClass = playerClass;
     }
 
     public int getLevel() {
@@ -90,6 +141,22 @@ public class PlayerStats {
 
     public void setEndurance(int endurance) {
         this.endurance = endurance;
+    }
+
+    public double getMana() {
+        return mana;
+    }
+
+    public void setMana(double mana) {
+        this.mana = Math.max(0, Math.min(mana, this.maxMana));
+    }
+
+    public double getMaxMana() {
+        return maxMana;
+    }
+
+    public void setMaxMana(double maxMana) {
+        this.maxMana = maxMana;
     }
 
     public int getSkillPoints() {

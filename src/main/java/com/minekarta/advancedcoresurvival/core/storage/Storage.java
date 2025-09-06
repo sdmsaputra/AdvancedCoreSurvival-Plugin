@@ -20,6 +20,10 @@ public interface Storage {
     void disconnect();
     boolean isConnected();
 
+    // --- Player Stats ---
+    CompletableFuture<com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats> loadPlayerStats(UUID playerUUID);
+    CompletableFuture<Void> savePlayerStats(com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats stats);
+
     // --- Economy ---
     CompletableFuture<Double> getPlayerBalance(UUID playerUUID);
     CompletableFuture<Void> setPlayerBalance(UUID playerUUID, double balance);
@@ -36,11 +40,13 @@ public interface Storage {
     CompletableFuture<List<String>> listHomes(UUID playerUUID);
 
     // --- Claims ---
+    CompletableFuture<java.util.Map<UUID, Integer>> getAllPlayersAndClaimCounts();
     CompletableFuture<Boolean> isChunkClaimed(String world, int chunkX, int chunkZ);
     CompletableFuture<UUID> getClaimOwner(String world, int chunkX, int chunkZ);
     CompletableFuture<Integer> getClaimId(String world, int chunkX, int chunkZ);
     CompletableFuture<Void> claimChunk(UUID owner, String world, int chunkX, int chunkZ);
     CompletableFuture<Void> unclaimChunk(String world, int chunkX, int chunkZ);
+    CompletableFuture<Void> unclaimAllChunks(UUID ownerUUID);
     CompletableFuture<Void> addClaimMember(int claimId, UUID memberUUID);
     CompletableFuture<Void> removeClaimMember(int claimId, UUID memberUUID);
     CompletableFuture<Boolean> isMemberOfClaim(int claimId, UUID memberUUID);

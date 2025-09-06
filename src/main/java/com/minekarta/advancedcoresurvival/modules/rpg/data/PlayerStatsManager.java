@@ -1,84 +1,70 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.data;
 
-import org.bukkit.Bukkit;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.configuration.file.FileConfiguration;
+import com.minekarta.advancedcoresurvival.core.storage.Storage;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages the loading, saving, and accessing of PlayerStats objects.
- * For now, this is an in-memory cache. In the future, it will connect to a database.
+ * Manages the loading, saving, and caching of PlayerStats objects
+ * by interacting with a Storage backend.
  */
 public class PlayerStatsManager {
 
     private final Map<UUID, PlayerStats> statsCache = new ConcurrentHashMap<>();
-    private final double healthPerEndurance;
+    private final Storage storage;
 
-    public PlayerStatsManager(FileConfiguration config) {
-        this.healthPerEndurance = config.getDouble("rpg.stats.health-per-endurance", 1.0);
+    public PlayerStatsManager(Storage storage) {
+        this.storage = storage;
     }
 
     /**
-     * Retrieves the stats for a given player from the cache.
-     * If the player is not in the cache, their data is loaded.
+     * Retrieves the stats for a given player, loading from storage if not cached.
+     * This is a synchronous call that waits for the data from the database.
      *
      * @param player The player whose stats are to be retrieved.
      * @return The PlayerStats object for the player.
      */
     public PlayerStats getPlayerStats(Player player) {
-        return statsCache.computeIfAbsent(player.getUniqueId(), uuid -> loadPlayerStats(player.getUniqueId()));
+        return statsCache.computeIfAbsent(player.getUniqueId(), this::loadPlayerStats);
     }
 
     /**
-     * Retrieves the stats for a given player UUID from the cache.
-     * This is useful for offline player operations if they are cached.
-     * Returns null if the player is not in the cache.
-     *
-     * @param uuid The UUID of the player.
-     * @return The PlayerStats object or null if not cached.
+     * Asynchronously retrieves the stats for a given player.
+     * This is preferred over the synchronous version if the caller can handle a CompletableFuture.
      */
-    public PlayerStats getPlayerStats(UUID uuid) {
-        return statsCache.get(uuid);
+    public CompletableFuture<PlayerStats> getPlayerStatsAsync(UUID uuid) {
+        if (statsCache.containsKey(uuid)) {
+            return CompletableFuture.completedFuture(statsCache.get(uuid));
+        }
+        return storage.loadPlayerStats(uuid).thenApply(stats -> {
+            statsCache.put(uuid, stats);
+            return stats;
+        });
     }
 
     /**
-     * Loads a player's stats into the cache.
-     * For now, this simply creates a new default PlayerStats object.
-     * In the future, this method will load data from a database.
+     * Loads a player's stats from storage into the cache.
      *
      * @param uuid The UUID of the player to load.
-     * @return The newly created PlayerStats object.
+     * @return The newly loaded PlayerStats object.
      */
-    public PlayerStats loadPlayerStats(UUID uuid) {
-        // In the future, this would load from a database (e.g., SQLite, MySQL)
-        // For now, we just create fresh stats.
-        PlayerStats newStats = new PlayerStats(uuid);
-        statsCache.put(uuid, newStats);
-
-        // Apply health bonus if the player is online
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null) {
-            updatePlayerHealth(player);
-        }
-
-        return newStats;
+    private PlayerStats loadPlayerStats(UUID uuid) {
+        return storage.loadPlayerStats(uuid).join();
     }
 
     /**
-     * Saves a player's stats from the cache.
-     * In the future, this will write the data to the database.
+     * Saves a player's stats from the cache to the storage.
      *
      * @param uuid The UUID of the player to save.
      */
     public void savePlayerStats(UUID uuid) {
         PlayerStats stats = statsCache.get(uuid);
         if (stats != null) {
-            // In the future, save the 'stats' object to the database here.
-            System.out.println("Simulating save for player " + uuid);
+            storage.savePlayerStats(stats);
         }
     }
 
@@ -91,18 +77,5 @@ public class PlayerStatsManager {
     public void unloadPlayer(UUID uuid) {
         savePlayerStats(uuid);
         statsCache.remove(uuid);
-    }
-
-    /**
-     * Updates a player's max health based on their Endurance stat.
-     * @param player The player to update.
-     */
-    public void updatePlayerHealth(Player player) {
-        PlayerStats stats = getPlayerStats(player);
-        if (stats == null) return;
-
-        // Minecraft's default health is 20. We add bonus health from endurance.
-        double bonusHealth = stats.getEndurance() * healthPerEndurance;
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20.0 + bonusHealth);
     }
 }

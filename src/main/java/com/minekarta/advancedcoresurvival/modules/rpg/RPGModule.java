@@ -2,10 +2,11 @@ package com.minekarta.advancedcoresurvival.modules.rpg;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
 import com.minekarta.advancedcoresurvival.core.modules.Module;
-import com.minekarta.advancedcoresurvival.modules.rpg.commands.StatsCommand;
+import com.minekarta.advancedcoresurvival.modules.rpg.commands.RPGCommand;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.leveling.LevelingManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.listeners.*;
+import com.minekarta.advancedcoresurvival.modules.rpg.skills.SkillManager;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
@@ -18,10 +19,15 @@ public class RPGModule implements Module {
 
     private PlayerStatsManager statsManager;
     private LevelingManager levelingManager;
+    private SkillManager skillManager;
 
     @Override
     public String getName() {
         return "rpg";
+    }
+
+    public PlayerStatsManager getStatsManager() {
+        return statsManager;
     }
 
     @Override
@@ -29,18 +35,22 @@ public class RPGModule implements Module {
         plugin.getLogger().info("Initializing RPG Module...");
 
         // Initialize managers
-        this.statsManager = new PlayerStatsManager(plugin.getConfig());
+        this.statsManager = new PlayerStatsManager(plugin.getStorageManager().getStorage());
+        this.skillManager = new SkillManager(plugin);
         this.levelingManager = new LevelingManager(statsManager, plugin.getConfig());
 
+        // Load data from config
+        skillManager.loadSkills();
+
         // Register Listeners
-        plugin.getServer().getPluginManager().registerEvents(new PlayerConnectionListener(statsManager), plugin);
+        plugin.getServer().getPluginManager().registerEvents(new PlayerConnectionListener(statsManager, skillManager, plugin), plugin);
         plugin.getServer().getPluginManager().registerEvents(new MiningSkillListener(levelingManager), plugin);
         plugin.getServer().getPluginManager().registerEvents(new FarmingSkillListener(levelingManager), plugin);
         plugin.getServer().getPluginManager().registerEvents(new WoodcuttingSkillListener(levelingManager), plugin);
         registerCombatListener(plugin);
 
         // Register Commands
-        plugin.getCommand("stats").setExecutor(new StatsCommand(statsManager));
+        plugin.getCommand("rpg").setExecutor(new RPGCommand(statsManager, skillManager));
 
         // Load stats for any players who are already online (e.g., on a /reload)
         for (Player player : Bukkit.getOnlinePlayers()) {

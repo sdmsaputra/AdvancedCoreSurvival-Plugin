@@ -55,9 +55,25 @@ public class SQLiteStorage implements Storage {
             // Player data table (for economy, etc.)
             String playerDataSql = "CREATE TABLE IF NOT EXISTS player_data (" +
                                    "uuid TEXT PRIMARY KEY NOT NULL," +
-                                   "balance REAL NOT NULL DEFAULT 0.0" +
+                                   "balance REAL NOT NULL DEFAULT 0.0," +
+                                   "player_class TEXT," +
+                                   "level INTEGER NOT NULL DEFAULT 1," +
+                                   "exp REAL NOT NULL DEFAULT 0.0," +
+                                   "strength INTEGER NOT NULL DEFAULT 5," +
+                                   "agility INTEGER NOT NULL DEFAULT 5," +
+                                   "endurance INTEGER NOT NULL DEFAULT 5," +
+                                   "skill_points INTEGER NOT NULL DEFAULT 0" +
                                    ");";
             statement.execute(playerDataSql);
+
+            // Player skills table
+            String playerSkillsSql = "CREATE TABLE IF NOT EXISTS player_skills (" +
+                                     "uuid TEXT NOT NULL," +
+                                     "skill_id TEXT NOT NULL," +
+                                     "skill_level INTEGER NOT NULL," +
+                                     "PRIMARY KEY (uuid, skill_id)" +
+                                     ");";
+            statement.execute(playerSkillsSql);
 
             // Server data table (for spawn location, etc.)
             String serverDataSql = "CREATE TABLE IF NOT EXISTS server_data (" +
@@ -471,6 +487,122 @@ public class SQLiteStorage implements Storage {
                 plugin.getLogger().log(Level.SEVERE, "Error getting claim members", e);
             }
             return members;
+        });
+    }
+
+    @Override
+    public CompletableFuture<java.util.Map<UUID, Integer>> getAllPlayersAndClaimCounts() {
+        return CompletableFuture.supplyAsync(() -> {
+            java.util.Map<UUID, Integer> playerClaimCounts = new java.util.HashMap<>();
+            String sql = "SELECT owner_uuid, COUNT(*) as claim_count FROM claims GROUP BY owner_uuid;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    UUID ownerUUID = UUID.fromString(rs.getString("owner_uuid"));
+                    int count = rs.getInt("claim_count");
+                    playerClaimCounts.put(ownerUUID, count);
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error getting all player claim counts", e);
+            }
+            return playerClaimCounts;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> unclaimAllChunks(UUID ownerUUID) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "DELETE FROM claims WHERE owner_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, ownerUUID.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error unclaiming all chunks for " + ownerUUID, e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats> loadPlayerStats(UUID playerUUID) {
+        return CompletableFuture.supplyAsync(() -> {
+            com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats stats = null;
+            String sql = "SELECT * FROM player_data WHERE uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, playerUUID.toString());
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    stats = new com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats(playerUUID);
+                    stats.setPlayerClass(rs.getString("player_class"));
+                    stats.setLevel(rs.getInt("level"));
+                    stats.setExp(rs.getDouble("exp"));
+                    stats.setStrength(rs.getInt("strength"));
+                    stats.setAgility(rs.getInt("agility"));
+                    stats.setEndurance(rs.getInt("endurance"));
+                    stats.setSkillPoints(rs.getInt("skill_points"));
+                } else {
+                    // Player not in DB, return fresh stats
+                    return new com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats(playerUUID);
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error loading player stats for " + playerUUID, e);
+                return new com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats(playerUUID); // Return fresh stats on error
+            }
+
+            // Load skills
+            String skillsSql = "SELECT skill_id, skill_level FROM player_skills WHERE uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(skillsSql)) {
+                pstmt.setString(1, playerUUID.toString());
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    stats.setSkillLevel(rs.getString("skill_id"), rs.getInt("skill_level"));
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error loading player skills for " + playerUUID, e);
+            }
+
+            return stats;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> savePlayerStats(com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats stats) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "INSERT OR REPLACE INTO player_data (uuid, player_class, level, exp, strength, agility, endurance, skill_points) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, stats.getPlayerUUID().toString());
+                pstmt.setString(2, stats.getPlayerClass());
+                pstmt.setInt(3, stats.getLevel());
+                pstmt.setDouble(4, stats.getExp());
+                pstmt.setInt(5, stats.getStrength());
+                pstmt.setInt(6, stats.getAgility());
+                pstmt.setInt(7, stats.getEndurance());
+                pstmt.setInt(8, stats.getSkillPoints());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error saving player stats for " + stats.getPlayerUUID(), e);
+            }
+
+            // Save skills - clear old ones first, then insert new ones
+            String deleteSql = "DELETE FROM player_skills WHERE uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(deleteSql)) {
+                pstmt.setString(1, stats.getPlayerUUID().toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error clearing player skills for " + stats.getPlayerUUID(), e);
+            }
+
+            String insertSql = "INSERT INTO player_skills (uuid, skill_id, skill_level) VALUES (?, ?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(insertSql)) {
+                for (java.util.Map.Entry<String, Integer> entry : stats.getSkillLevels().entrySet()) {
+                    pstmt.setString(1, stats.getPlayerUUID().toString());
+                    pstmt.setString(2, entry.getKey());
+                    pstmt.setInt(3, entry.getValue());
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error saving player skills for " + stats.getPlayerUUID(), e);
+            }
         });
     }
 }
