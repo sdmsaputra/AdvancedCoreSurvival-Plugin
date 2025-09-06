@@ -62,7 +62,7 @@ public class PlayerStatsManager {
         // Apply health bonus if the player is online
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
-            updatePlayerHealth(player);
+            applyAllBonuses(player);
         }
 
         return newStats;
@@ -94,15 +94,20 @@ public class PlayerStatsManager {
     }
 
     /**
-     * Updates a player's max health based on their Endurance stat.
+     * Applies all permanent stat bonuses (health, armor, etc.) to a player.
+     * This should be called after stats are loaded or recalculated.
      * @param player The player to update.
      */
-    public void updatePlayerHealth(Player player) {
+    public void applyAllBonuses(Player player) {
         PlayerStats stats = getPlayerStats(player);
         if (stats == null) return;
 
-        // Minecraft's default health is 20. We add bonus health from endurance.
+        // Apply health bonus from Endurance
         double bonusHealth = stats.getEndurance() * healthPerEndurance;
         player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20.0 + bonusHealth);
+
+        // Apply armor bonus from skills
+        double armorBonus = stats.getStatBonus("ARMOR_BONUS");
+        player.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(armorBonus);
     }
 }

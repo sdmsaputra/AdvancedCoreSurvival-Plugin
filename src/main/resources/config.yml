@@ -121,6 +121,61 @@ rpg:
     dodge-chance-per-agility: 0.005
     # The amount of extra health (in half hearts) per point of Endurance.
     health-per-endurance: 1.0
+
+  # --- SKILL TREE ---
+  # This section defines the skills available in the /rpg skills GUI.
+  # Each entry under 'skill-tree' is a unique skill identifier.
+  skill-tree:
+    # ID of the skill, used internally. Must be unique.
+    sword_damage_boost:
+      # Is the skill enabled and will it appear in the GUI?
+      enabled: true
+      # The name displayed in the GUI. Supports color codes.
+      name: "&aKekuatan Pedang"
+      # The description lore shown in the GUI. Supports color codes.
+      # Placeholders: {level}, {max_level}, {cost}, {current_bonus}
+      description:
+        - "&7Meningkatkan kerusakan pedang sebesar &b+5%&7 per level."
+        - "&7Saat ini: &e{current_bonus}%"
+        - ""
+        - "&7Level: &e{level}&7/&e{max_level}"
+        - "&7Biaya: &b{cost} &7Poin Keahlian"
+      # The material to use for the item icon in the GUI.
+      # A full list can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+      icon: "DIAMOND_SWORD"
+      # The cost in skill points to upgrade this skill by one level.
+      cost: 1
+      # The maximum level this skill can reach.
+      max-level: 5
+      # Type of skill. Currently, only PASSIVE is supported.
+      # PASSIVE: Applies a permanent boost to the player's stats.
+      # ACTIVE: Would be for a usable ability (not yet implemented).
+      type: "PASSIVE"
+      # The specific stat this skill modifies. This must match a value the plugin understands.
+      # Examples: SWORD_DAMAGE_BONUS, ARMOR_BONUS, MAX_MANA_BONUS
+      stat: "SWORD_DAMAGE_BONUS"
+      # The value of the bonus per level. For percentages, 0.05 means 5%.
+      value: 0.05
+      # (Optional) List of other skill IDs required before this one can be unlocked.
+      # e.g., requires: ["skill_id_1", "skill_id_2"]
+      requires: []
+
+    iron_skin:
+      enabled: true
+      name: "&7Kulit Besi"
+      description:
+        - "&7Meningkatkan pertahanan (armor) sebesar &b+1&7 per level."
+        - "&7Saat ini: &e{current_bonus}"
+        - ""
+        - "&7Level: &e{level}&7/&e{max_level}"
+        - "&7Biaya: &b{cost} &7Poin Keahlian"
+      icon: "IRON_CHESTPLATE"
+      cost: 1
+      max-level: 5
+      type: "PASSIVE"
+      stat: "ARMOR_BONUS"
+      value: 1.0 # Represents +1 armor point
+      requires: []
   exp-rewards:
     combat:
       ZOMBIE: 10.0

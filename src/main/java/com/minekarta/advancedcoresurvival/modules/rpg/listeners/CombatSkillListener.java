@@ -66,13 +66,23 @@ public class CombatSkillListener implements Listener {
             }
         }
 
-        // --- Strength (Damage Bonus) ---
+        // --- Strength (Damage Bonus) & Skill-based Damage Bonus ---
         if (event.getDamager() instanceof Player) {
             Player attacker = (Player) event.getDamager();
             PlayerStats attackerStats = statsManager.getPlayerStats(attacker);
             if (attackerStats != null) {
+                // Base bonus damage from Strength (flat increase)
                 double bonusDamage = attackerStats.getStrength() * damagePerStrength;
-                event.setDamage(event.getDamage() + bonusDamage);
+                double currentDamage = event.getDamage() + bonusDamage;
+
+                // Multiplicative bonus from skills (e.g., SWORD_DAMAGE_BONUS)
+                double damageMultiplier = 1.0;
+                String itemInHand = attacker.getInventory().getItemInMainHand().getType().name();
+                if (itemInHand.endsWith("_SWORD")) {
+                    damageMultiplier += attackerStats.getStatBonus("SWORD_DAMAGE_BONUS");
+                }
+
+                event.setDamage(currentDamage * damageMultiplier);
             }
         }
     }

@@ -77,13 +77,11 @@ commands:
     description: Open the Admin Shop.
     aliases: [ashop]
     permission: advancedcoresurvival.economy.adminshop
-  stats:
-    description: Displays your RPG stats.
-    usage: /stats
-    permission: advancedcoresurvival.rpg.stats
   rpg:
-    description: View your RPG stats and skills.
+    description: Main command for RPG features.
+    aliases: [skill, skills]
     permission: advancedcoresurvival.rpg.base
+    usage: /<command> [stats|skills]
   class:
     description: View your class and abilities.
     permission: advancedcoresurvival.mmorpg.base
