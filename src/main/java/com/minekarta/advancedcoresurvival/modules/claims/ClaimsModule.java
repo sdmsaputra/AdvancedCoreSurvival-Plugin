@@ -3,8 +3,12 @@ package com.minekarta.advancedcoresurvival.modules.claims;
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
 import com.minekarta.advancedcoresurvival.core.modules.Module;
 import com.minekarta.advancedcoresurvival.modules.claims.commands.ClaimCommand;
+import com.minekarta.advancedcoresurvival.modules.claims.tax.ClaimTaxManager;
 
 public class ClaimsModule implements Module {
+
+    private ClaimTaxManager taxManager;
+
     @Override
     public String getName() {
         return "claims";
@@ -13,6 +17,11 @@ public class ClaimsModule implements Module {
     @Override
     public void onEnable(AdvancedCoreSurvival plugin) {
         plugin.getLogger().info("Claims module enabled. Registering commands and listeners...");
+
+        // Initialize and start the tax manager
+        taxManager = new ClaimTaxManager(plugin);
+        taxManager.start();
+
         // Register the main /claim command handler
         plugin.getCommand("claim").setExecutor(new ClaimCommand(plugin));
 
@@ -22,6 +31,8 @@ public class ClaimsModule implements Module {
 
     @Override
     public void onDisable() {
-        // Logic to run when the module is disabled
+        if (taxManager != null) {
+            taxManager.stop();
+        }
     }
 }

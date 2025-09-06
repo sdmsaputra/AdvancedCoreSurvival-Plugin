@@ -33,6 +33,9 @@ public final class AdvancedCoreSurvival extends JavaPlugin {
             getLogger().info("Successfully registered PlaceholderAPI expansion.");
         }
 
+        // Register core commands
+        getCommand("advancedcoresurvival").setExecutor(new com.minekarta.advancedcoresurvival.core.commands.AdminCommand(this));
+
         getLogger().info("AdvancedCoreSurvival has been enabled successfully!");
     }
 

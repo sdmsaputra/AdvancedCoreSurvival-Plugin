@@ -90,7 +90,15 @@ claims:
   provider: "internal"
   internal:
     max-claims-per-player: 3
-    # tax-per-day: 0 # Not implemented yet
+    tax:
+      # The amount of money charged per claimed chunk, per day.
+      # Set to 0 to disable claim tax.
+      cost-per-chunk-per-day: 10.0
+      # What action to take when a player cannot afford their taxes.
+      # Supported values:
+      #   "NONE": Do nothing. Just send a warning message.
+      #   "UNCLAIM_ALL": Unclaim all of the player's chunks.
+      on-failure: "UNCLAIM_ALL"
     flags:
       pvp: false
       fire-spread: false
