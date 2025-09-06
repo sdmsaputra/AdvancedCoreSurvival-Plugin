@@ -473,4 +473,36 @@ public class SQLiteStorage implements Storage {
             return members;
         });
     }
+
+    @Override
+    public CompletableFuture<java.util.Map<UUID, Integer>> getAllPlayersAndClaimCounts() {
+        return CompletableFuture.supplyAsync(() -> {
+            java.util.Map<UUID, Integer> playerClaimCounts = new java.util.HashMap<>();
+            String sql = "SELECT owner_uuid, COUNT(*) as claim_count FROM claims GROUP BY owner_uuid;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    UUID ownerUUID = UUID.fromString(rs.getString("owner_uuid"));
+                    int count = rs.getInt("claim_count");
+                    playerClaimCounts.put(ownerUUID, count);
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error getting all player claim counts", e);
+            }
+            return playerClaimCounts;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> unclaimAllChunks(UUID ownerUUID) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "DELETE FROM claims WHERE owner_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, ownerUUID.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error unclaiming all chunks for " + ownerUUID, e);
+            }
+        });
+    }
 }
