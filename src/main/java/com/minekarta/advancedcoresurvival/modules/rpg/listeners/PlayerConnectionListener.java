@@ -23,7 +23,7 @@ public class PlayerConnectionListener implements Listener {
         // The getPlayerStats method in the manager handles the initial loading.
         statsManager.getPlayerStats(event.getPlayer());
         // Update their health based on their stats
-        statsManager.updatePlayerHealth(event.getPlayer());
+        statsManager.applyAllBonuses(event.getPlayer());
     }
 
     @EventHandler
