@@ -1,0 +1,194 @@
+# AdvancedCoreSurvival - Main Configuration
+# For detailed documentation on each option, please visit the project wiki.
+
+# --- Module Control ---
+# Enable or disable entire features of the plugin here.
+# If a module is disabled, all related commands, permissions, and features will be turned off.
+modules:
+  claims: true
+  essentials-integration: true
+  cmi-integration: true
+  survival-essentials: true
+  economy: true
+  auction-house: true
+  player-shops: true
+  admin-shops: true
+  rpg: true
+  mmorpg: true
+  party: true
+  team: true
+  placeholderapi: true
+
+# --- Integration Settings ---
+integration:
+  # The priority order for hooks when multiple plugins providing similar features (like homes, spawn) are present.
+  # The plugin will try to use the first one in the list that is available on the server.
+  # Supported: "cmi", "essentials", "internal"
+  priority: "cmi,essentials,internal"
+
+  essentialsx:
+    enabled: true
+    # If true, ACS will try to take over commands like /home, even if EssentialsX is present.
+    override-commands: false
+    use-economy: true
+    use-homes: true
+    use-spawn: true
+  cmi:
+    enabled: true
+    override-commands: false
+    use-economy: true
+    use-homes: true
+    use-spawn: true
+
+# --- Data Storage ---
+storage:
+  # The type of storage to use for all plugin data.
+  # Supported: "sqlite", "mysql" (YAML is not recommended for production).
+  type: sqlite
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "advancedcoresurvival"
+    username: "root"
+    password: ""
+    pool-size: 10
+
+# --- General Settings ---
+# The default language for plugin messages. Corresponds to a file in the 'languages' folder.
+# e.g., "en_US" will load 'messages_en_US.yml'.
+locale: "en_US"
+
+# Enable this to see detailed debugging information in the console.
+# This can be very spammy and is not recommended for production servers.
+debug: false
+
+# --- Module-Specific Settings ---
+
+essentials:
+  max-homes: 3
+  allow-bed-home: true
+  tpa:
+    cooldown: 30
+    expire: 60
+  back:
+    enabled: true
+
+economy:
+  mode: internal    # internal | vault
+  starting-balance: 1000
+  currency-symbol: "$"
+  pay:
+    enabled: true
+    min-amount: 1
+    tax-percent: 0
+  baltop:
+    limit: 10
+
+claims:
+  # The provider for land claiming. "internal" uses the built-in system.
+  # Other options could be: griefprevention, lands, worldguard, etc.
+  provider: "internal"
+  internal:
+    max-claims-per-player: 3
+    tax:
+      # The amount of money charged per claimed chunk, per day.
+      # Set to 0 to disable claim tax.
+      cost-per-chunk-per-day: 10.0
+      # What action to take when a player cannot afford their taxes.
+      # Supported values:
+      #   "NONE": Do nothing. Just send a warning message.
+      #   "UNCLAIM_ALL": Unclaim all of the player's chunks.
+      on-failure: "UNCLAIM_ALL"
+    flags:
+      pvp: false
+      fire-spread: false
+      mob-griefing: false
+
+rpg:
+  leveling:
+    # The formula used is: required_exp_for_next_level = base-exp * (multiplier ^ (current_level - 1))
+    # Example: To get from level 1 to 2, you need 'base-exp'. To get from 2 to 3, you need 'base-exp * multiplier'.
+    base-exp: 1000
+    # How much harder each level gets. 1.2 means 20% harder than the last.
+    # Set to 1.0 for linear progression (same exp for every level).
+    exp-multiplier: 1.2
+    # The number of skill points awarded to a player each time they level up.
+    skill-points-per-level: 1
+    # --- Messages ---
+    # Message sent to the player when they level up.
+    # Placeholders: %player_name%, %new_level%
+    level-up-message: "&a&lCongratulations, %player_name%! You have reached Level %new_level%!"
+    # Message shown in the action bar when a player gains EXP.
+    # Placeholders: %gained_exp%, %current_exp%, %required_exp%, %exp_bar%
+    # Set to "" to disable.
+    exp-gain-action-bar: "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%"
+  stats:
+    # The bonus damage applied per point of Strength.
+    damage-per-strength: 0.5
+    # The chance to dodge an attack per point of Agility (0.01 = 1%).
+    dodge-chance-per-agility: 0.005
+    # The amount of extra health (in half hearts) per point of Endurance.
+    health-per-endurance: 1.0
+
+  # --- SKILL TREE ---
+  # This section defines the skills available in the /rpg skills GUI.
+  # Each entry under 'skill-tree' is a unique skill identifier.
+  skill-tree:
+    # ID of the skill, used internally. Must be unique.
+    sword_damage_boost:
+      # Is the skill enabled and will it appear in the GUI?
+      enabled: true
+      # The name displayed in the GUI. Supports color codes.
+      name: "&aKekuatan Pedang"
+      # The description lore shown in the GUI. Supports color codes.
+      # Placeholders: {level}, {max_level}, {cost}, {current_bonus}
+      description:
+        - "&7Meningkatkan kerusakan pedang sebesar &b+5%&7 per level."
+        - "&7Saat ini: &e{current_bonus}%"
+        - ""
+        - "&7Level: &e{level}&7/&e{max_level}"
+        - "&7Biaya: &b{cost} &7Poin Keahlian"
+      # The material to use for the item icon in the GUI.
+      # A full list can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+      icon: "DIAMOND_SWORD"
+      # The cost in skill points to upgrade this skill by one level.
+      cost: 1
+      # The maximum level this skill can reach.
+      max-level: 5
+      # Type of skill. Currently, only PASSIVE is supported.
+      # PASSIVE: Applies a permanent boost to the player's stats.
+      # ACTIVE: Would be for a usable ability (not yet implemented).
+      type: "PASSIVE"
+      # The specific stat this skill modifies. This must match a value the plugin understands.
+      # Examples: SWORD_DAMAGE_BONUS, ARMOR_BONUS, MAX_MANA_BONUS
+      stat: "SWORD_DAMAGE_BONUS"
+      # The value of the bonus per level. For percentages, 0.05 means 5%.
+      value: 0.05
+      # (Optional) List of other skill IDs required before this one can be unlocked.
+      # e.g., requires: ["skill_id_1", "skill_id_2"]
+      requires: []
+
+    iron_skin:
+      enabled: true
+      name: "&7Kulit Besi"
+      description:
+        - "&7Meningkatkan pertahanan (armor) sebesar &b+1&7 per level."
+        - "&7Saat ini: &e{current_bonus}"
+        - ""
+        - "&7Level: &e{level}&7/&e{max_level}"
+        - "&7Biaya: &b{cost} &7Poin Keahlian"
+      icon: "IRON_CHESTPLATE"
+      cost: 1
+      max-level: 5
+      type: "PASSIVE"
+      stat: "ARMOR_BONUS"
+      value: 1.0 # Represents +1 armor point
+      requires: []
+  exp-rewards:
+    combat:
+      ZOMBIE: 10.0
+      SKELETON: 10.0
+      SPIDER: 8.0
+      CREEPER: 15.0
+      ENDERMAN: 20.0
+      BLAZE: 25.0

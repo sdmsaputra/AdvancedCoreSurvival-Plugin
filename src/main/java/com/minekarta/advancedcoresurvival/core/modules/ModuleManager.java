@@ -5,6 +5,7 @@ import com.minekarta.advancedcoresurvival.core.config.ConfigManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Manages the lifecycle of all feature modules.
@@ -29,6 +30,12 @@ public class ModuleManager {
      */
     public boolean isModuleEnabled(String moduleName) {
         return enabledModules.stream().anyMatch(module -> module.getName().equalsIgnoreCase(moduleName));
+    }
+
+    public Optional<Module> getModule(String name) {
+        return enabledModules.stream()
+                .filter(module -> module.getName().equalsIgnoreCase(name))
+                .findFirst();
     }
 
     /**

@@ -119,6 +119,96 @@ public class ACSEconomy implements Economy {
         return true; // Accounts are created implicitly
     }
 
+    @Override
+    @Deprecated
+    public boolean hasAccount(String playerName) {
+        return hasAccount(plugin.getServer().getOfflinePlayer(playerName));
+    }
+
+    @Override
+    @Deprecated
+    public boolean hasAccount(String playerName, String worldName) {
+        return hasAccount(plugin.getServer().getOfflinePlayer(playerName), worldName);
+    }
+
+    @Override
+    @Deprecated
+    public double getBalance(String playerName) {
+        return getBalance(plugin.getServer().getOfflinePlayer(playerName));
+    }
+
+    @Override
+    @Deprecated
+    public double getBalance(String playerName, String world) {
+        return getBalance(plugin.getServer().getOfflinePlayer(playerName), world);
+    }
+
+    @Override
+    @Deprecated
+    public boolean has(String playerName, double amount) {
+        return has(plugin.getServer().getOfflinePlayer(playerName), amount);
+    }
+
+    @Override
+    @Deprecated
+    public boolean has(String playerName, String worldName, double amount) {
+        return has(plugin.getServer().getOfflinePlayer(playerName), worldName, amount);
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse withdrawPlayer(String playerName, double amount) {
+        return withdrawPlayer(plugin.getServer().getOfflinePlayer(playerName), amount);
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount) {
+        return withdrawPlayer(plugin.getServer().getOfflinePlayer(playerName), worldName, amount);
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse depositPlayer(String playerName, double amount) {
+        return depositPlayer(plugin.getServer().getOfflinePlayer(playerName), amount);
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse depositPlayer(String playerName, String worldName, double amount) {
+        return depositPlayer(plugin.getServer().getOfflinePlayer(playerName), worldName, amount);
+    }
+
+    @Override
+    @Deprecated
+    public boolean createPlayerAccount(String playerName) {
+        return createPlayerAccount(plugin.getServer().getOfflinePlayer(playerName));
+    }
+
+    @Override
+    @Deprecated
+    public boolean createPlayerAccount(String playerName, String worldName) {
+        return createPlayerAccount(plugin.getServer().getOfflinePlayer(playerName), worldName);
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse createBank(String name, String player) {
+        return createBank(name, plugin.getServer().getOfflinePlayer(player));
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse isBankOwner(String name, String playerName) {
+        return isBankOwner(name, plugin.getServer().getOfflinePlayer(playerName));
+    }
+
+    @Override
+    @Deprecated
+    public EconomyResponse isBankMember(String name, String playerName) {
+        return isBankMember(name, plugin.getServer().getOfflinePlayer(playerName));
+    }
+
     // --- Unsupported Methods ---
     @Override
     public boolean hasAccount(OfflinePlayer player, String worldName) { return hasAccount(player); }
