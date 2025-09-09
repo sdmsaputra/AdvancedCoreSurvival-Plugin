@@ -1,7 +1,7 @@
 package com.minekarta.advancedcoresurvival.modules.claims.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
-import org.bukkit.ChatColor;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import org.bukkit.Chunk;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,14 +19,14 @@ public class ClaimCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (args.length == 0) {
             // Show help message
-            player.sendMessage(ChatColor.RED + "Usage: /claim <create|delete|trust|untrust|info>");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.invalid-usage", "%usage%", "/claim <create|delete|trust|untrust|info>"));
             return true;
         }
 
@@ -37,7 +37,7 @@ public class ClaimCommand implements CommandExecutor {
                 break;
             // Other cases for delete, trust, etc. will be added later
             default:
-                player.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /claim <create|delete|trust|untrust|info>");
+                player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.invalid-usage", "%usage%", "/claim <create|delete|trust|untrust|info>"));
                 break;
         }
         return true;
@@ -45,7 +45,7 @@ public class ClaimCommand implements CommandExecutor {
 
     private void handleCreate(Player player) {
         if (!player.hasPermission("advancedcoresurvival.claim.create")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to create claims.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return;
         }
 
@@ -58,7 +58,7 @@ public class ClaimCommand implements CommandExecutor {
         plugin.getStorageManager().getStorage().isChunkClaimed(worldName, chunkX, chunkZ).thenAccept(isClaimed -> {
             if (isClaimed) {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.RED + "This land is already claimed.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.claim.already-claimed"));
                 });
                 return;
             }
@@ -68,7 +68,7 @@ public class ClaimCommand implements CommandExecutor {
                 int maxClaims = plugin.getConfigManager().getMaxClaimsPerPlayer();
                 if (claimCount >= maxClaims) {
                     plugin.getServer().getScheduler().runTask(plugin, () -> {
-                        player.sendMessage(ChatColor.RED + "You have reached your maximum claim limit (" + maxClaims + ").");
+                        player.sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.claim.limit-reached", "%limit%", String.valueOf(maxClaims)));
                     });
                     return;
                 }
@@ -76,7 +76,7 @@ public class ClaimCommand implements CommandExecutor {
                 // Proceed with claiming
                 plugin.getStorageManager().getStorage().claimChunk(player.getUniqueId(), worldName, chunkX, chunkZ).thenRun(() -> {
                     plugin.getServer().getScheduler().runTask(plugin, () -> {
-                        player.sendMessage(ChatColor.GREEN + "You have successfully claimed this chunk!");
+                        player.sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.claim.success"));
                         // Maybe show some particle effects to indicate the chunk borders
                     });
                 });

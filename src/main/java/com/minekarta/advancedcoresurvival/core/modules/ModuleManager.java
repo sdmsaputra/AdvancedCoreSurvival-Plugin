@@ -49,6 +49,7 @@ public class ModuleManager {
         modules.add(new com.minekarta.advancedcoresurvival.modules.essentials.EssentialsModule());
         modules.add(new com.minekarta.advancedcoresurvival.modules.economy.EconomyModule());
         modules.add(new com.minekarta.advancedcoresurvival.modules.claims.ClaimsModule());
+        modules.add(new com.minekarta.advancedcoresurvival.modules.bank.BankModule());
     }
 
     /**

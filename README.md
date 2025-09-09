@@ -1,67 +1,147 @@
 # AdvancedCoreSurvival
 
-![Java CI with Maven](https://github.com/Minekarta-Studio/AdvancedCoreSurvival/actions/workflows/maven.yml/badge.svg)
-
-**AdvancedCoreSurvival** is a comprehensive, modular survival core plugin for PaperMC servers, designed to provide a premium, all-in-one experience. Developed by **Minekarta Studio**, it combines essentials, economy, land claiming, and RPG features into a single, highly configurable package.
-
-This plugin was proudly developed with the assistance of an advanced AI software engineer.
+**AdvancedCoreSurvival** adalah plugin inti survival yang komprehensif dan modular untuk server berbasis Paper, yang dirancang untuk memberikan pengalaman premium dan lengkap dalam satu paket. Dikembangkan oleh **Minekarta Studio**, plugin ini menggabungkan fitur-fitur esensial, ekonomi, klaim tanah, perbankan, dan RPG ke dalam satu paket yang sangat dapat dikonfigurasi.
 
 ---
 
-## ✨ Features
+## Daftar Isi
 
-AdvancedCoreSurvival is built on a powerful modular system. You can enable or disable features in the `config.yml` to tailor the plugin to your server's needs.
-
-### Currently Implemented Core Features:
-
-*   **🔌 Modular System**: Enable and disable modules on the fly.
-*   **💾 Flexible Data Storage**: Supports SQLite out-of-the-box with an extensible design for MySQL. All database operations are performed **asynchronously** to prevent server lag.
-*   **🏠 Survival Essentials**:
-    *   `/setspawn` & `/spawn`: Set and teleport to the server's global spawn point.
-    *   `/sethome`, `/home`, `/delhome`: Allow players to set, manage, and teleport to their personal homes. Home count is configurable.
-*   **💰 Economy**:
-    *   `/balance`: Check a player's balance.
-    *   **Starting Balance**: Automatically give new players a configurable starting balance.
-    *   **Vault Integration**: Hooks directly into Vault, providing a robust economy provider for other plugins to use.
-*   **🔒 Land Claiming**:
-    *   `/claim create`: Players can claim the chunk they are standing in.
-    *   **Claim Protection**: Automatically prevents non-members from breaking or placing blocks in claimed chunks.
-    *   **Configurable Limits**: Set a maximum number of claims per player.
-*   **🌐 Integrations**:
-    *   **Vault**: Full support for the Vault economy API.
-    *   **PlaceholderAPI**: Provides a wide range of placeholders for use in other plugins.
-
-### Planned Features (from `documentation.md`):
-
-*   Full implementation of all commands for Essentials, Economy, and Claims.
-*   Advanced RPG and MMORPG modules with skills, classes, and abilities.
-*   Party and Team systems for player grouping.
-*   In-game shops, auction houses, and more.
+*   [Bab 1: Fitur Utama](#bab-1-fitur-utama)
+*   [Bab 2: Instalasi](#bab-2-instalasi)
+*   [Bab 3: Konfigurasi](#bab-3-konfigurasi)
+    *   [Konfigurasi Utama (`config.yml`)](#konfigurasi-utama-configyml)
+    *   [Konfigurasi Pesan (`messages.yml`)](#konfigurasi-pesan-messagesyml)
+*   [Bab 4: Modul-Modul](#bab-4-modul-modul)
+    *   [Modul Ekonomi](#modul-ekonomi)
+    *   [Modul Bank](#modul-bank)
+    *   [Modul RPG & Keterampilan](#modul-rpg--keterampilan)
+    *   [Modul Klaim Tanah](#modul-klaim-tanah)
+    *   [Modul Esensial](#modul-esensial)
+*   [Bab 5: Perintah & Izin](#bab-5-perintah--izin)
+*   [Bab 6: Panduan untuk Pengembang (API)](#bab-6-panduan-untuk-pengembang-api)
+*   [Bab 7: Dukungan](#bab-7-dukungan)
 
 ---
 
-## 🚀 Installation
+## Bab 1: Fitur Utama
 
-1.  Download the latest release of `AdvancedCoreSurvival.jar` from the [releases page](https://github.com/Minekarta-Studio/AdvancedCoreSurvival/releases).
-2.  Place the `.jar` file into your server's `plugins/` folder.
-3.  (Required) Install [Vault](https://www.spigotmc.org/resources/vault.34315/) and [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/).
-4.  Start your server once to generate the default configuration files.
-5.  Edit `/plugins/AdvancedCoreSurvival/config.yml` to enable the modules and features you want.
-6.  Restart the server or use `/acs reload` (when implemented).
+*   **🔌 Sistem Modular**: Aktifkan atau nonaktifkan fitur-fitur utama seperti Ekonomi, RPG, dan Klaim sesuai kebutuhan server Anda melalui `config.yml`.
+*   **💾 Penyimpanan Data Fleksibel**: Dukungan penuh untuk **SQLite** (default, tanpa setup) dan **MySQL** (untuk skalabilitas server yang lebih besar). Semua operasi database dilakukan secara **asinkron** untuk mencegah lag server.
+*   **🌐 Sistem Lokalisasi**: Semua pesan yang ditampilkan kepada pemain dapat diubah dan diterjemahkan dengan mudah melalui file `messages.yml`.
+*   **🏦 Sistem Perbankan**: Pemain dapat membuat bank milik mereka sendiri, menyimpan uang, dan mengundang anggota lain untuk bergabung.
+*   **⚔️ Sistem RPG**: Sistem leveling dengan statistik (Kekuatan, Kelincahan, Daya Tahan) dan pohon keterampilan yang dapat ditingkatkan menggunakan Poin Keterampilan.
+*   **🔒 Klaim Tanah**: Lindungi tanah Anda dari pemain lain dengan sistem klaim berbasis chunk.
+*   **💰 Ekonomi Terintegrasi**: Sistem ekonomi yang kuat dengan dukungan Vault.
+*   **🏠 Fitur Esensial**: Perintah-perintah penting seperti `/home`, `/spawn`, dan lainnya.
+*   **📊 GUI Interaktif**: Antarmuka pengguna grafis untuk fitur-fitur seperti Pohon Keterampilan dan Bank, memberikan pengalaman pengguna yang lebih baik.
 
----
+## Bab 2: Instalasi
 
-## 📖 Documentation
+1.  Unduh rilis terbaru `AdvancedCoreSurvival.jar` dari [halaman rilis](https://github.com/Minekarta-Studio/AdvancedCoreSurvival/releases).
+2.  Tempatkan file `.jar` ke dalam folder `plugins/` server Anda.
+3.  (Wajib) Instal [Vault](https://www.spigotmc.org/resources/vault.34315/).
+4.  (Opsional) Instal [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) untuk menggunakan placeholder dari plugin ini.
+5.  Mulai server Anda sekali untuk menghasilkan file konfigurasi default.
+6.  Edit file konfigurasi di `/plugins/AdvancedCoreSurvival/` sesuai kebutuhan.
+7.  Mulai ulang server atau gunakan `/acs reload` (jika diimplementasikan).
 
-For a complete guide to all features, commands, permissions, and configuration options, please see the **[Full Technical Documentation](documentation.md)**.
+## Bab 3: Konfigurasi
 
-This includes:
-- Detailed configuration for every module.
-- A complete list of all commands and permissions.
-- Information for developers on how to use the API.
+### Konfigurasi Utama (`config.yml`)
 
----
+File ini mengontrol semua aspek fungsional dari plugin.
 
-## 💬 Support
+*   **`modules`**: Aktifkan (`true`) atau nonaktifkan (`false`) modul-modul utama.
+    ```yaml
+    modules:
+      claims: true
+      economy: true
+      rpg: true
+      bank: true
+      # ...dan lainnya
+    ```
+*   **`storage`**: Pilih jenis penyimpanan data Anda.
+    *   **`type`**: `sqlite` (direkomendasikan untuk server kecil) atau `mysql` (direkomendasikan untuk server besar atau jaringan).
+    *   **`mysql`**: Jika Anda menggunakan `mysql`, isi detail koneksi database Anda di sini.
+    ```yaml
+    storage:
+      type: sqlite # atau mysql
+      mysql:
+        host: "localhost"
+        port: 3306
+        database: "advancedcoresurvival"
+        username: "root"
+        password: ""
+    ```
+*   **Konfigurasi per Modul**: Setiap modul memiliki bagian konfigurasinya sendiri (misalnya, `bank`, `rpg`, `claims`) di mana Anda dapat menyesuaikan pengaturan spesifik seperti biaya pembuatan bank, perolehan EXP, dll.
 
-If you encounter any bugs or have a feature request, please [open an issue](https://github.com/Minekarta-Studio/AdvancedCoreSurvival/issues) on our GitHub repository. Please include your server version, plugin version, and any relevant logs or configuration files.
+### Konfigurasi Pesan (`messages.yml`)
+
+File ini berisi semua teks yang dilihat oleh pemain. Anda dapat menerjemahkan atau mengubah pesan apa pun di sini.
+
+*   **`prefix`**: Awalan global yang ditambahkan ke sebagian besar pesan plugin.
+*   **Struktur Pesan**: Pesan diatur berdasarkan kategori (misalnya, `bank`, `rpg`, `general`). Anda dapat menggunakan kode warna Bukkit standar dengan simbol `&`.
+    ```yaml
+    prefix: "&8[&aACS&8] &r"
+    bank:
+      deposit-success: "&aAnda menyimpan %amount% ke bank."
+      insufficient-funds: "&cSaldo bank tidak mencukupi untuk penarikan ini."
+    ```
+
+## Bab 4: Modul-Modul
+
+### Modul Ekonomi
+*   **Deskripsi**: Menyediakan fondasi untuk semua fitur ekonomi. Terintegrasi dengan Vault.
+*   **Perintah Utama**: `/balance`, `/pay`, `/baltop`.
+
+### Modul Bank
+*   **Deskripsi**: Memungkinkan pemain untuk membuat dan mengelola bank bersama. Bank memiliki saldo sendiri dan daftar anggota.
+*   **Fitur**:
+    *   Buat dan hapus bank dengan biaya yang dapat dikonfigurasi.
+    *   Setor dan tarik uang dari saldo bank.
+    *   Undang pemain lain untuk menjadi anggota atau keluarkan mereka.
+*   **Perintah Utama**: `/bank <gui|create|deposit|withdraw|...>`
+
+### Modul RPG & Keterampilan
+*   **Deskripsi**: Tambahkan elemen RPG ke server Anda. Pemain mendapatkan EXP dari berbagai aktivitas (misalnya, membunuh monster) untuk naik level.
+*   **Fitur**:
+    *   **Level & EXP**: Sistem leveling yang dapat dikonfigurasi.
+    *   **Poin Keterampilan**: Dapatkan poin setiap kali naik level untuk dibelanjakan di Pohon Keterampilan.
+    *   **GUI Pohon Keterampilan**: Buka dengan `/skills` atau `/rpg`. GUI interaktif untuk melihat statistik dan meningkatkan keterampilan pasif seperti kerusakan pedang atau pertahanan.
+*   **Perintah Utama**: `/skills`, `/rpg <stats|skills>`
+
+### Modul Klaim Tanah
+*   **Deskripsi**: Sistem perlindungan tanah berbasis chunk.
+*   **Fitur**:
+    *   Klaim tanah untuk melindunginya dari orang lain.
+    *   Pajak klaim harian (opsional) untuk menyeimbangkan ekonomi.
+*   **Perintah Utama**: `/claim <create|delete|trust|...>`
+
+### Modul Esensial
+*   **Deskripsi**: Menyediakan perintah-perintah dasar yang penting untuk server survival.
+*   **Perintah Utama**: `/spawn`, `/sethome`, `/home`, `/delhome`, `/tpa`.
+
+## Bab 5: Perintah & Izin
+
+Setiap perintah memiliki izin terkait. Berikut adalah ringkasan singkat. Untuk daftar lengkap, periksa file `plugin.yml`.
+
+| Perintah                 | Izin                                        | Deskripsi                                        |
+| ------------------------ | ------------------------------------------- | ------------------------------------------------ |
+| `/acs`                   | `advancedcoresurvival.admin`                | Perintah admin utama.                            |
+| `/bank`                  | `advancedcoresurvival.bank.base`            | Perintah dasar untuk manajemen bank.             |
+| `/bank create`           | `advancedcoresurvival.bank.create`          | Untuk membuat bank baru.                         |
+| `/skills` atau `/rpg`    | `advancedcoresurvival.rpg.base`             | Membuka GUI Keterampilan atau melihat statistik. |
+| `/claim create`          | `advancedcoresurvival.claim.create`         | Untuk mengklaim sebidang tanah.                  |
+| `/home`, `/sethome`      | `advancedcoresurvival.essentials.home`      | Perintah dasar untuk rumah pemain.               |
+
+## Bab 6: Panduan untuk Pengembang (API)
+
+AdvancedCoreSurvival dirancang agar dapat diperluas.
+
+*   **Antarmuka `Storage`**: Semua interaksi database dilakukan melalui antarmuka `Storage`. Anda dapat mengaksesnya melalui `plugin.getStorageManager().getStorage()` untuk berinteraksi dengan data pemain secara asinkron dan aman.
+*   **Event Kustom**: Plugin ini menyediakan event-event kustom (misalnya, `ACSBalanceChangeEvent`) yang dapat Anda dengarkan untuk berintegrasi dengan sistem Anda.
+*   **Sistem Modul**: Anda dapat membangun modul Anda sendiri dengan mengimplementasikan antarmuka `Module` dan mendaftarkannya di `ModuleManager`.
+
+## Bab 7: Dukungan
+
+Jika Anda menemukan bug, memiliki permintaan fitur, atau butuh bantuan, silakan [buka isu](https://github.com/Minekarta-Studio/AdvancedCoreSurvival/issues) di repositori GitHub kami. Harap sertakan versi server, versi plugin, dan log atau file konfigurasi yang relevan.

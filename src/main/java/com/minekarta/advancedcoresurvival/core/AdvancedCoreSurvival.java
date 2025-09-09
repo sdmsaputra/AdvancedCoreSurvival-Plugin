@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.core;
 
 import com.minekarta.advancedcoresurvival.core.config.ConfigManager;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.modules.ModuleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +18,10 @@ public final class AdvancedCoreSurvival extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.loadAndSaveDefaults();
         getLogger().info("Configuration loaded.");
+
+        // Step 1.5: Initialize Locale Manager
+        LocaleManager.getInstance().loadMessages(this);
+        getLogger().info("Locale messages loaded.");
 
         // Step 2: Initialize Storage
         storageManager = new StorageManager(this);

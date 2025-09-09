@@ -1,0 +1,100 @@
+# --------------------------------------------------- #
+#       AdvancedCoreSurvival Message Configuration    #
+# --------------------------------------------------- #
+# All user-facing messages can be configured here.
+# The plugin supports standard Bukkit color codes using the '&' symbol.
+# Placeholders (e.g., %player%) will be replaced by the plugin dynamically.
+
+prefix: "&8[&aACS&8] &r"
+
+general:
+  no-permission: "&cYou do not have permission to execute this command."
+  player-not-found: "&cPlayer '%player%' not found."
+  must-be-player: "&cThis command can only be executed by a player."
+  invalid-usage: "&cInvalid usage. Please use: %usage%"
+  not-implemented: "&eThis feature is not yet implemented."
+
+claims:
+  tax:
+    collected: "&a$%tax% has been collected for your %count% claimed chunk(s)."
+    failed: "&cYou could not afford your daily claim tax of $%tax%."
+    unclaimed-all: "&cAs you could not afford the tax, all your claimed lands have been released."
+  protection:
+    break-denied: "&cYou can't break blocks here. This land is claimed."
+    place-denied: "&cYou can't place blocks here. This land is claimed."
+  claim:
+    success: "&aYou have successfully claimed this chunk!"
+    already-claimed: "&cThis land is already claimed."
+    limit-reached: "&cYou have reached your maximum claim limit (%limit%)."
+
+admin:
+  help:
+    header: "&6AdvancedCoreSurvival Admin"
+    runtax: "&7/acs runtax - Manually run the claim tax collection."
+    stats: "&7/acs stats <player> <stat> <value> - Set a player's stat."
+  stats:
+    usage: "&cUsage: /acs stats <player> <stat> <value>"
+    nan: "&cValue must be a number."
+    unknown-stat: "&cUnknown stat: %stat%"
+    success: "&a%player%'s %stat% set to %value%."
+  module-not-enabled: "&cModule '%module%' is not enabled."
+  runtax:
+    starting: "&eManually starting claim tax collection..."
+    success: "&aTax collection process started asynchronously. Check console for details."
+    no-manager: "&cClaimTaxManager is not available."
+
+bank:
+  bank-created: "&aYou have successfully created a new bank named '%bank_name%'."
+  bank-deleted: "&aYou have successfully deleted your bank."
+  creation-fail-exists: "&cCould not create bank. A bank with that name already exists."
+  creation-fail-limit: "&cYou have reached the maximum number of banks you can own."
+  creation-fail-cost: "&cYou do not have enough money to create a bank. Cost: %cost%"
+  deposit-success: "&aYou deposited %amount% into the bank."
+  withdraw-success: "&aYou withdrew %amount% from the bank."
+  insufficient-funds: "&cThe bank does not have enough funds for this withdrawal."
+  not-a-member: "&cYou are not a member of this bank."
+  invite-sent: "&aAn invitation to join your bank has been sent to %player%."
+  invite-received: "&aYou have been invited to join the bank '%bank_name%'. Type /bank join %bank_name% to accept."
+  player-kicked: "&aYou have kicked %player% from the bank."
+  you-were-kicked: "&cYou have been kicked from the bank '%bank_name%'."
+  balance: "&aBank Balance: &e%balance%"
+
+economy:
+  balance:
+    self: "&aYour balance: &e%balance%"
+    other: "&a%player%'s balance: &e%balance%"
+
+essentials:
+  spawn:
+    teleporting: "&aTeleporting you to the spawn..."
+    not-set: "&cThe server spawn has not been set yet. Contact an administrator."
+    set-success: "&aServer spawn location has been set to your current position."
+  home:
+    no-homes: "&eYou have no homes set. Use /sethome <name> to set one."
+    list: "&aYour homes: &f%homelist%"
+    teleporting: "&aTeleporting to home '&f%home%&a'."
+    not-found: "&cHome '&f%home%&c' not found."
+    name-invalid: "&cHome name can only contain letters and numbers."
+    limit-reached: "&cYou have reached your maximum number of homes (%limit%)."
+    set-success: "&aHome '&f%home%&a' has been set!"
+    deleted: "&aHome '&f%home%&a' has been deleted."
+
+rpg:
+  level-up: "&a&lCongratulations, %player_name%! You have reached Level %new_level%!"
+  exp-gain-action-bar: "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%"
+  skill-upgraded: "&aYou have upgraded %skill_name% to Level %level%!"
+  skill-max-level: "&cYou have already maxed out this skill."
+  not-enough-skill-points: "&cYou do not have enough skill points."
+  skill-unlock-required: "&cYou must unlock %skill_name% first."
+  gui:
+    title: "Pohon Keahlian"
+    stats-item:
+      name: "&aStatistik Anda"
+      lore:
+        - "&7Level: &e%level%"
+        - "&7Poin Keahlian: &b%points%"
+        - "&7EXP: &e%exp% / %req_exp%"
+    skill-item:
+      max-level: "&6Level Maksimal Tercapai"
+      can-afford: "&aKlik untuk meningkatkan!"
+      cant-afford: "&cPoin keahlian tidak cukup."

@@ -1,8 +1,8 @@
 package com.minekarta.advancedcoresurvival.modules.essentials.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,13 +22,13 @@ public class SpawnCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (!player.hasPermission("advancedcoresurvival.essentials.spawn")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
@@ -37,9 +37,9 @@ public class SpawnCommand implements CommandExecutor {
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (spawnLocation != null) {
                     player.teleport(spawnLocation);
-                    player.sendMessage(ChatColor.GREEN + "Teleporting you to the spawn...");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.spawn.teleporting"));
                 } else {
-                    player.sendMessage(ChatColor.RED + "The server spawn has not been set yet. Contact an administrator.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.spawn.not-set"));
                 }
             });
         });

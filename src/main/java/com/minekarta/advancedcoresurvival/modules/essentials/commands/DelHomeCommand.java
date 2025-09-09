@@ -1,8 +1,8 @@
 package com.minekarta.advancedcoresurvival.modules.essentials.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,18 +21,18 @@ public class DelHomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (!player.hasPermission("advancedcoresurvival.essentials.delhome")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage(ChatColor.RED + "Usage: /delhome <name>");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.invalid-usage", "%usage%", "/delhome <name>"));
             return true;
         }
 
@@ -42,7 +42,7 @@ public class DelHomeCommand implements CommandExecutor {
         storageManager.getStorage().getHome(player.getUniqueId(), homeName).thenAccept(location -> {
             if (location == null) {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.RED + "Home '" + homeName + "' not found.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.not-found", "%home%", homeName));
                 });
                 return;
             }
@@ -50,7 +50,7 @@ public class DelHomeCommand implements CommandExecutor {
             // Home exists, so delete it
             storageManager.getStorage().deleteHome(player.getUniqueId(), homeName).thenRun(() -> {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.GREEN + "Home '" + homeName + "' has been deleted.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.deleted", "%home%", homeName));
                 });
             });
         });

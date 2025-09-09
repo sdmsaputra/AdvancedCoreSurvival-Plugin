@@ -23,8 +23,7 @@ public class StorageManager {
         if (storageType.equalsIgnoreCase("sqlite")) {
             storage = new SQLiteStorage(plugin);
         } else if (storageType.equalsIgnoreCase("mysql")) {
-            // storage = new MySQLStorage(plugin);
-            plugin.getLogger().warning("MySQL storage is selected, but not yet implemented.");
+            storage = new MySQLStorage(plugin);
         } else {
             plugin.getLogger().severe("Invalid storage type '" + storageType + "' in config.yml. The plugin will not be able to save data.");
             return;

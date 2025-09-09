@@ -1,7 +1,7 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/listeners/PlayerConnectionListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/data/PlayerStats.java
-/app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/skills/Skill.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/economy/commands/BalanceCommand.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/skills/Skill.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/AdvancedCoreSurvival.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/config/ConfigManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/commands/SetSpawnCommand.java
@@ -9,7 +9,10 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/commands/HomeCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/listeners/FarmingSkillListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/RPGModule.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/gui/BankGUI.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/modules/Module.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/BankModule.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/core/storage/MySQLStorage.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/commands/SpawnCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/commands/AdminCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/listeners/MiningSkillListener.java
@@ -17,8 +20,10 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/tax/ClaimTaxManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/commands/DelHomeCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/integrations/vault/VaultHook.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/commands/BankCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/listeners/WoodcuttingSkillListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/commands/RPGCommand.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/core/locale/LocaleManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/EssentialsModule.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/commands/ClaimCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/ClaimProtectionListener.java
@@ -26,8 +31,8 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/storage/SQLiteStorage.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/leveling/LevelingManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/ui/SkillTreeGUI.java
-/app/src/main/java/com/minekarta/advancedcoresurvival/core/storage/Storage.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/modules/ModuleManager.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/core/storage/Storage.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/economy/EconomyModule.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/ClaimsModule.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/data/PlayerStatsManager.java

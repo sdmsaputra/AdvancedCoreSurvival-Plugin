@@ -1,7 +1,7 @@
 package com.minekarta.advancedcoresurvival.modules.claims;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
-import org.bukkit.ChatColor;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,7 +37,7 @@ public class ClaimProtectionListener implements Listener {
                             if (!isMember) {
                                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                                     event.setCancelled(true);
-                                    player.sendMessage(ChatColor.RED + "You can't break blocks here. This land is claimed.");
+                                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.protection.break-denied"));
                                 });
                             }
                         });
@@ -65,7 +65,7 @@ public class ClaimProtectionListener implements Listener {
                             if (!isMember) {
                                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                                     event.setCancelled(true);
-                                    player.sendMessage(ChatColor.RED + "You can't place blocks here. This land is claimed.");
+                                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.protection.place-denied"));
                                 });
                             }
                         });

@@ -2,8 +2,8 @@ package com.minekarta.advancedcoresurvival.modules.essentials.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
 import com.minekarta.advancedcoresurvival.core.config.ConfigManager;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,13 +24,13 @@ public class SetHomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (!player.hasPermission("advancedcoresurvival.essentials.sethome")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
@@ -40,7 +40,7 @@ public class SetHomeCommand implements CommandExecutor {
         }
 
         if (!homeName.matches("^[a-zA-Z0-9]+$")) {
-            player.sendMessage(ChatColor.RED + "Home name can only contain letters and numbers.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.name-invalid"));
             return true;
         }
 
@@ -54,7 +54,7 @@ public class SetHomeCommand implements CommandExecutor {
             if (homeCount >= maxHomes) {
                 // Schedule sync task to send message
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.RED + "You have reached your maximum number of homes (" + maxHomes + ").");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.limit-reached", "%limit%", String.valueOf(maxHomes)));
                 });
                 return;
             }
@@ -62,7 +62,7 @@ public class SetHomeCommand implements CommandExecutor {
             // Set the home
             storageManager.getStorage().setHome(player.getUniqueId(), finalHomeName, player.getLocation()).thenRun(() -> {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.GREEN + "Home '" + finalHomeName + "' has been set!");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.set-success", "%home%", finalHomeName));
                 });
             });
         });

@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.core.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.modules.ModuleManager;
 import com.minekarta.advancedcoresurvival.modules.claims.ClaimsModule;
 import com.minekarta.advancedcoresurvival.modules.claims.tax.ClaimTaxManager;
@@ -9,6 +10,7 @@ import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -27,9 +29,9 @@ public class AdminCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(Component.text("AdvancedCoreSurvival Admin").color(NamedTextColor.GOLD));
-            sender.sendMessage(Component.text("/acs runtax - Manually run the claim tax collection.").color(NamedTextColor.GRAY));
-            sender.sendMessage(Component.text("/acs stats <player> <stat> <value> - Set a player's stat.").color(NamedTextColor.GRAY));
+            sender.sendMessage(l("admin.help.header"));
+            sender.sendMessage(l("admin.help.runtax"));
+            sender.sendMessage(l("admin.help.stats"));
             return true;
         }
 
@@ -48,12 +50,12 @@ public class AdminCommand implements CommandExecutor {
 
     private void handleStats(CommandSender sender, String[] args) {
         if (!sender.hasPermission("advancedcoresurvival.admin")) {
-            sender.sendMessage(Component.text("You don't have permission to do that.").color(NamedTextColor.RED));
+            sender.sendMessage(l("general.no-permission"));
             return;
         }
 
         if (args.length != 4) {
-            sender.sendMessage(Component.text("Usage: /acs stats <player> <stat> <value>").color(NamedTextColor.RED));
+            sender.sendMessage(l("admin.stats.usage"));
             return;
         }
 
@@ -63,7 +65,7 @@ public class AdminCommand implements CommandExecutor {
         try {
             value = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
-            sender.sendMessage(Component.text("Value must be a number.").color(NamedTextColor.RED));
+            sender.sendMessage(l("admin.stats.nan"));
             return;
         }
 
@@ -80,7 +82,7 @@ public class AdminCommand implements CommandExecutor {
                     break;
                 // Add other stats here in the future
                 default:
-                    sender.sendMessage(Component.text("Unknown stat: " + statName).color(NamedTextColor.RED));
+                    sender.sendMessage(l("admin.stats.unknown-stat", "%stat%", statName));
                     return;
             }
 
@@ -89,20 +91,20 @@ public class AdminCommand implements CommandExecutor {
                 if (player.isOnline()) {
                     statsManager.applyAllBonuses(player.getPlayer());
                 }
-                sender.sendMessage(Component.text(player.getName() + "'s " + statName + " set to " + value + ".").color(NamedTextColor.GREEN));
+                sender.sendMessage(l("admin.stats.success", "%player%", player.getName(), "%stat%", statName, "%value%", String.valueOf(value)));
             }
         }, () -> {
-            sender.sendMessage(Component.text("RPG module is not enabled.").color(NamedTextColor.RED));
+            sender.sendMessage(l("admin.module-not-enabled", "%module%", "RPG"));
         });
     }
 
     private void handleRunTax(CommandSender sender) {
         if (!sender.hasPermission("advancedcoresurvival.admin")) {
-            sender.sendMessage(Component.text("You don't have permission to do that.").color(NamedTextColor.RED));
+            sender.sendMessage(l("general.no-permission"));
             return;
         }
 
-        sender.sendMessage(Component.text("Manually starting claim tax collection...").color(NamedTextColor.YELLOW));
+        sender.sendMessage(l("admin.runtax.starting"));
 
         // Get the ClaimsModule and its TaxManager directly
         plugin.getModuleManager().getModule("claims").ifPresentOrElse(module -> {
@@ -111,12 +113,19 @@ public class AdminCommand implements CommandExecutor {
 
             if (taxManager != null) {
                 taxManager.collectTaxes();
-                sender.sendMessage(Component.text("Tax collection process started asynchronously. Check console for details.").color(NamedTextColor.GREEN));
+                sender.sendMessage(l("admin.runtax.success"));
             } else {
-                sender.sendMessage(Component.text("ClaimTaxManager is not available.").color(NamedTextColor.RED));
+                sender.sendMessage(l("admin.runtax.no-manager"));
             }
         }, () -> {
-            sender.sendMessage(Component.text("Claims module is not enabled.").color(NamedTextColor.RED));
+            sender.sendMessage(l("admin.module-not-enabled", "%module%", "Claims"));
         });
+    }
+
+    /**
+     * Helper method to shorten the LocaleManager call.
+     */
+    private Component l(String key, String... replacements) {
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(LocaleManager.getInstance().getFormattedMessage(key, replacements));
     }
 }

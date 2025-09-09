@@ -20,7 +20,7 @@ public class EconomyListener implements Listener {
         if (!player.hasPlayedBefore()) {
             // This is the player's first time on the server
             double startingBalance = plugin.getConfigManager().getStartingBalance();
-            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), startingBalance);
+            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), player.getWorld().getName(), startingBalance);
             plugin.getLogger().info("Gave starting balance of " + startingBalance + " to new player " + player.getName());
         }
     }

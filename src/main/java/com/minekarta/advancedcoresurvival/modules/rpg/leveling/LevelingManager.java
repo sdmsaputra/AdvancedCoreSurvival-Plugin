@@ -1,5 +1,6 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.leveling;
 
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -13,8 +14,6 @@ public class LevelingManager {
     private final double baseExp;
     private final double expMultiplier;
     private final int skillPointsPerLevel;
-    private final String levelUpMessage;
-    private final String expGainActionBar;
 
     public LevelingManager(PlayerStatsManager statsManager, FileConfiguration config) {
         this.statsManager = statsManager;
@@ -23,8 +22,6 @@ public class LevelingManager {
         this.baseExp = config.getDouble("rpg.leveling.base-exp", 1000.0);
         this.expMultiplier = config.getDouble("rpg.leveling.exp-multiplier", 1.2);
         this.skillPointsPerLevel = config.getInt("rpg.leveling.skill-points-per-level", 1);
-        this.levelUpMessage = config.getString("rpg.leveling.level-up-message", "&a&lCongratulations, %player_name%! You have reached Level %new_level%!");
-        this.expGainActionBar = config.getString("rpg.leveling.exp-gain-action-bar", "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%");
     }
 
     /**
@@ -60,10 +57,11 @@ public class LevelingManager {
             stats.setExp(stats.getExp() - requiredExp);
 
             // Send level up message
-            if (levelUpMessage != null && !levelUpMessage.isEmpty()) {
-                String message = ChatColor.translateAlternateColorCodes('&', levelUpMessage
-                        .replace("%player_name%", player.getName())
-                        .replace("%new_level%", String.valueOf(stats.getLevel())));
+            String message = LocaleManager.getInstance().getRawFormattedMessage("rpg.level-up",
+                    "%player_name%", player.getName(),
+                    "%new_level%", String.valueOf(stats.getLevel())
+            );
+            if (!message.isEmpty()) {
                 player.sendMessage(message);
             }
 
@@ -100,23 +98,22 @@ public class LevelingManager {
      * @param gainedAmount The amount of EXP the player just gained.
      */
     public void sendExpActionBar(Player player, double gainedAmount) {
-        if (expGainActionBar == null || expGainActionBar.isEmpty()) {
-            return;
-        }
-
         PlayerStats stats = statsManager.getPlayerStats(player);
         if (stats == null) return;
 
         double currentExp = stats.getExp();
         double requiredExp = getRequiredExp(stats.getLevel() + 1);
 
-        String message = expGainActionBar
-                .replace("%gained_exp%", String.format("%.1f", gainedAmount))
-                .replace("%current_exp%", String.format("%.1f", currentExp))
-                .replace("%required_exp%", String.format("%.0f", requiredExp));
+        String message = LocaleManager.getInstance().getRawFormattedMessage("rpg.exp-gain-action-bar",
+                "%gained_exp%", String.format("%.1f", gainedAmount),
+                "%current_exp%", String.format("%.1f", currentExp),
+                "%required_exp%", String.format("%.0f", requiredExp),
+                "%exp_bar%", createProgressBar(currentExp, requiredExp)
+        );
 
-        // Create the EXP bar
-        message = message.replace("%exp_bar%", createProgressBar(currentExp, requiredExp));
+        if (message.isEmpty()) {
+            return;
+        }
 
         // Using spigot API to send action bar messages
         // Note: This needs to be compiled against Spigot/Paper API
