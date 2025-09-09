@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.core.storage;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import org.bukkit.Location;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public interface Storage {
     boolean isConnected();
 
     // --- Economy ---
-    CompletableFuture<Double> getPlayerBalance(UUID playerUUID);
-    CompletableFuture<Void> setPlayerBalance(UUID playerUUID, double balance);
+    CompletableFuture<Double> getPlayerBalance(UUID playerUUID, String worldName);
+    CompletableFuture<Void> setPlayerBalance(UUID playerUUID, String worldName, double balance);
 
     // --- Essentials (Spawn) ---
     CompletableFuture<Void> setSpawnLocation(Location location);
@@ -48,4 +49,20 @@ public interface Storage {
     CompletableFuture<Boolean> isMemberOfClaim(int claimId, UUID memberUUID);
     CompletableFuture<List<UUID>> getClaimMembers(int claimId);
     CompletableFuture<Integer> getClaimCount(UUID ownerUUID);
+
+    // --- RPG ---
+    CompletableFuture<Void> savePlayerStats(PlayerStats stats);
+    CompletableFuture<PlayerStats> loadPlayerStats(UUID playerUUID);
+
+    // --- Banks ---
+    CompletableFuture<Boolean> hasBank(String name);
+    CompletableFuture<Boolean> createBank(String name, UUID owner);
+    CompletableFuture<Boolean> deleteBank(String name);
+    CompletableFuture<Double> getBankBalance(String name);
+    CompletableFuture<Void> setBankBalance(String name, double balance);
+    CompletableFuture<Boolean> isBankOwner(String name, UUID player);
+    CompletableFuture<Boolean> isBankMember(String name, UUID player);
+    CompletableFuture<Void> addBankMember(String name, UUID player);
+    CompletableFuture<Void> removeBankMember(String name, UUID player);
+    CompletableFuture<List<String>> getBanks();
 }

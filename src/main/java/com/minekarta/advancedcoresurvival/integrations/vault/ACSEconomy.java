@@ -33,7 +33,7 @@ public class ACSEconomy implements Economy {
 
     @Override
     public boolean hasBankSupport() {
-        return false;
+        return true;
     }
 
     @Override
@@ -63,11 +63,11 @@ public class ACSEconomy implements Economy {
 
     @Override
     public double getBalance(OfflinePlayer player) {
-        try {
-            return plugin.getStorageManager().getStorage().getPlayerBalance(player.getUniqueId()).get();
-        } catch (Exception e) {
-            return 0;
-        }
+        // If no world is specified, default to the player's current world, or the main world if offline.
+        String worldName = (player.isOnline() && player.getPlayer() != null)
+                ? player.getPlayer().getWorld().getName()
+                : plugin.getServer().getWorlds().get(0).getName();
+        return getBalance(player, worldName);
     }
 
     @Override
@@ -77,41 +77,18 @@ public class ACSEconomy implements Economy {
 
     @Override
     public EconomyResponse withdrawPlayer(OfflinePlayer player, double amount) {
-        if (amount < 0) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot withdraw negative amount.");
-        }
-        try {
-            double oldBalance = getBalance(player);
-            if (oldBalance < amount) {
-                return new EconomyResponse(0, oldBalance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds.");
-            }
-            double newBalance = oldBalance - amount;
-            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), newBalance).get();
-            if (player.isOnline()) {
-                plugin.getServer().getPluginManager().callEvent(new ACSBalanceChangeEvent(player.getPlayer(), oldBalance, newBalance));
-            }
-            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
-        } catch (Exception e) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
-        }
+        String worldName = (player.isOnline() && player.getPlayer() != null)
+                ? player.getPlayer().getWorld().getName()
+                : plugin.getServer().getWorlds().get(0).getName();
+        return withdrawPlayer(player, worldName, amount);
     }
 
     @Override
     public EconomyResponse depositPlayer(OfflinePlayer player, double amount) {
-        if (amount < 0) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot deposit negative amount.");
-        }
-        try {
-            double oldBalance = getBalance(player);
-            double newBalance = oldBalance + amount;
-            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), newBalance).get();
-            if (player.isOnline()) {
-                plugin.getServer().getPluginManager().callEvent(new ACSBalanceChangeEvent(player.getPlayer(), oldBalance, newBalance));
-            }
-            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
-        } catch (Exception e) {
-            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
-        }
+        String worldName = (player.isOnline() && player.getPlayer() != null)
+                ? player.getPlayer().getWorld().getName()
+                : plugin.getServer().getWorlds().get(0).getName();
+        return depositPlayer(player, worldName, amount);
     }
 
     @Override
@@ -209,35 +186,191 @@ public class ACSEconomy implements Economy {
         return isBankMember(name, plugin.getServer().getOfflinePlayer(playerName));
     }
 
-    // --- Unsupported Methods ---
+    // --- World-Specific Methods ---
     @Override
-    public boolean hasAccount(OfflinePlayer player, String worldName) { return hasAccount(player); }
+    public boolean hasAccount(OfflinePlayer player, String worldName) {
+        // In this implementation, accounts are implicit and exist everywhere.
+        return true;
+    }
+
     @Override
-    public double getBalance(OfflinePlayer player, String world) { return getBalance(player); }
+    public double getBalance(OfflinePlayer player, String world) {
+        if (world == null) {
+            return getBalance(player);
+        }
+        try {
+            // .get() is used for simplicity, but a real implementation should handle the Future properly.
+            return plugin.getStorageManager().getStorage().getPlayerBalance(player.getUniqueId(), world).get();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Error getting balance for " + player.getName() + " in world " + world + ": " + e.getMessage());
+            return 0;
+        }
+    }
+
     @Override
-    public boolean has(OfflinePlayer player, String worldName, double amount) { return has(player, amount); }
+    public boolean has(OfflinePlayer player, String worldName, double amount) {
+        return getBalance(player, worldName) >= amount;
+    }
+
     @Override
-    public EconomyResponse withdrawPlayer(OfflinePlayer player, String worldName, double amount) { return withdrawPlayer(player, amount); }
+    public EconomyResponse withdrawPlayer(OfflinePlayer player, String worldName, double amount) {
+        if (amount < 0) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot withdraw negative amount.");
+        }
+        if (worldName == null) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "World name cannot be null.");
+        }
+        try {
+            double oldBalance = getBalance(player, worldName);
+            if (oldBalance < amount) {
+                return new EconomyResponse(0, oldBalance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds.");
+            }
+            double newBalance = oldBalance - amount;
+            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), worldName, newBalance).get();
+            if (player.isOnline()) {
+                plugin.getServer().getPluginManager().callEvent(new ACSBalanceChangeEvent(player.getPlayer(), oldBalance, newBalance));
+            }
+            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred during withdrawal.");
+        }
+    }
+
     @Override
-    public EconomyResponse depositPlayer(OfflinePlayer player, String worldName, double amount) { return depositPlayer(player, amount); }
+    public EconomyResponse depositPlayer(OfflinePlayer player, String worldName, double amount) {
+        if (amount < 0) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot deposit negative amount.");
+        }
+        if (worldName == null) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "World name cannot be null.");
+        }
+        try {
+            double oldBalance = getBalance(player, worldName);
+            double newBalance = oldBalance + amount;
+            plugin.getStorageManager().getStorage().setPlayerBalance(player.getUniqueId(), worldName, newBalance).get();
+            if (player.isOnline()) {
+                plugin.getServer().getPluginManager().callEvent(new ACSBalanceChangeEvent(player.getPlayer(), oldBalance, newBalance));
+            }
+            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred during deposit.");
+        }
+    }
+
     @Override
-    public boolean createPlayerAccount(OfflinePlayer player, String worldName) { return createPlayerAccount(player); }
+    public boolean createPlayerAccount(OfflinePlayer player, String worldName) {
+        // Accounts are created implicitly on first transaction.
+        return true;
+    }
+
+    // --- Bank Methods ---
     @Override
-    public EconomyResponse createBank(String name, OfflinePlayer player) { return notImplemented(); }
+    public EconomyResponse createBank(String name, OfflinePlayer player) {
+        try {
+            boolean success = plugin.getStorageManager().getStorage().createBank(name, player.getUniqueId()).get();
+            if (success) {
+                return new EconomyResponse(0, 0, EconomyResponse.ResponseType.SUCCESS, "Bank created.");
+            } else {
+                return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Bank name already exists.");
+            }
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse deleteBank(String name) { return notImplemented(); }
+    public EconomyResponse deleteBank(String name) {
+        try {
+            boolean success = plugin.getStorageManager().getStorage().deleteBank(name).get();
+            if (success) {
+                return new EconomyResponse(0, 0, EconomyResponse.ResponseType.SUCCESS, "Bank deleted.");
+            } else {
+                return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Bank not found.");
+            }
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse bankBalance(String name) { return notImplemented(); }
+    public EconomyResponse bankBalance(String name) {
+        try {
+            double balance = plugin.getStorageManager().getStorage().getBankBalance(name).get();
+            return new EconomyResponse(0, balance, EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse bankHas(String name, double amount) { return notImplemented(); }
+    public EconomyResponse bankHas(String name, double amount) {
+        try {
+            double balance = plugin.getStorageManager().getStorage().getBankBalance(name).get();
+            if (balance >= amount) {
+                return new EconomyResponse(0, balance, EconomyResponse.ResponseType.SUCCESS, null);
+            } else {
+                return new EconomyResponse(0, balance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds.");
+            }
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse bankWithdraw(String name, double amount) { return notImplemented(); }
+    public EconomyResponse bankWithdraw(String name, double amount) {
+        if (amount < 0) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot withdraw negative amount.");
+        try {
+            double oldBalance = plugin.getStorageManager().getStorage().getBankBalance(name).get();
+            if (oldBalance < amount) {
+                return new EconomyResponse(0, oldBalance, EconomyResponse.ResponseType.FAILURE, "Insufficient funds.");
+            }
+            double newBalance = oldBalance - amount;
+            plugin.getStorageManager().getStorage().setBankBalance(name, newBalance).get();
+            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse bankDeposit(String name, double amount) { return notImplemented(); }
+    public EconomyResponse bankDeposit(String name, double amount) {
+        if (amount < 0) return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "Cannot deposit negative amount.");
+        try {
+            double oldBalance = plugin.getStorageManager().getStorage().getBankBalance(name).get();
+            double newBalance = oldBalance + amount;
+            plugin.getStorageManager().getStorage().setBankBalance(name, newBalance).get();
+            return new EconomyResponse(amount, newBalance, EconomyResponse.ResponseType.SUCCESS, null);
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse isBankOwner(String name, OfflinePlayer player) { return notImplemented(); }
+    public EconomyResponse isBankOwner(String name, OfflinePlayer player) {
+        try {
+            boolean isOwner = plugin.getStorageManager().getStorage().isBankOwner(name, player.getUniqueId()).get();
+            return new EconomyResponse(0, 0, isOwner ? EconomyResponse.ResponseType.SUCCESS : EconomyResponse.ResponseType.FAILURE, "");
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public EconomyResponse isBankMember(String name, OfflinePlayer player) { return notImplemented(); }
+    public EconomyResponse isBankMember(String name, OfflinePlayer player) {
+        try {
+            boolean isMember = plugin.getStorageManager().getStorage().isBankMember(name, player.getUniqueId()).get();
+            return new EconomyResponse(0, 0, isMember ? EconomyResponse.ResponseType.SUCCESS : EconomyResponse.ResponseType.FAILURE, "");
+        } catch (Exception e) {
+            return new EconomyResponse(0, 0, EconomyResponse.ResponseType.FAILURE, "An error occurred.");
+        }
+    }
+
     @Override
-    public List<String> getBanks() { return Collections.emptyList(); }
+    public List<String> getBanks() {
+        try {
+            return plugin.getStorageManager().getStorage().getBanks().get();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
 }
