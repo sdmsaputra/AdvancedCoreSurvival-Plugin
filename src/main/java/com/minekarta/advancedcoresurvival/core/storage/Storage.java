@@ -65,4 +65,9 @@ public interface Storage {
     CompletableFuture<Void> addBankMember(String name, UUID player);
     CompletableFuture<Void> removeBankMember(String name, UUID player);
     CompletableFuture<List<String>> getBanks();
+
+    // Bank Invites
+    CompletableFuture<Void> addBankInvite(int bankId, UUID invitedUUID);
+    CompletableFuture<Integer> getBankInvite(UUID invitedUUID);
+    CompletableFuture<Void> removeBankInvite(UUID invitedUUID);
 }
