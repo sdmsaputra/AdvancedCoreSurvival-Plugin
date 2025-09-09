@@ -1,10 +1,12 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.ui;
 
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.skills.Skill;
 import com.minekarta.advancedcoresurvival.modules.rpg.skills.SkillManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,8 +30,6 @@ public class SkillTreeGUI implements Listener {
     private final SkillManager skillManager;
     private Inventory inventory;
 
-    private static final String GUI_TITLE = "Pohon Keahlian";
-
     public SkillTreeGUI(Player player, PlayerStatsManager statsManager, SkillManager skillManager) {
         this.player = player;
         this.statsManager = statsManager;
@@ -40,14 +40,35 @@ public class SkillTreeGUI implements Listener {
     public void open() {
         PlayerStats stats = statsManager.getPlayerStats(player);
         int inventorySize = 54; // 6 rows
-        this.inventory = Bukkit.createInventory(null, inventorySize, Component.text(GUI_TITLE));
+        String title = LocaleManager.getInstance().getRawFormattedMessage("rpg.gui.title");
+        this.inventory = Bukkit.createInventory(null, inventorySize, LegacyComponentSerializer.legacyAmpersand().deserialize(title));
 
         // Populate GUI with skills
         int slot = 0;
         for (Skill skill : skillManager.getSkills().values()) {
-            if (slot >= inventorySize) break;
+            if (slot >= 45) break; // Leave last row for info
             inventory.setItem(slot++, createSkillItem(skill, stats));
         }
+
+        // Add player stats item
+        ItemStack statsItem = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta statsMeta = statsItem.getItemMeta();
+        String statsName = LocaleManager.getInstance().getRawFormattedMessage("rpg.gui.stats-item.name");
+        statsMeta.displayName(LegacyComponentSerializer.legacyAmpersand().deserialize(statsName));
+
+        List<String> statsLoreConfig = LocaleManager.getInstance().getMessagesConfig().getStringList("rpg.gui.stats-item.lore");
+        List<Component> statsLore = new ArrayList<>();
+        for (String line : statsLoreConfig) {
+            line = line.replace("%level%", String.valueOf(stats.getLevel()))
+                       .replace("%points%", String.valueOf(stats.getSkillPoints()))
+                       .replace("%exp%", String.format("%,.0f", stats.getExp()))
+                       .replace("%req_exp%", "1000"); // Placeholder
+            statsLore.add(LegacyComponentSerializer.legacyAmpersand().deserialize(line));
+        }
+        statsMeta.lore(statsLore);
+        statsItem.setItemMeta(statsMeta);
+
+        inventory.setItem(49, statsItem); // Bottom middle slot
 
         player.openInventory(inventory);
     }
@@ -68,14 +89,14 @@ public class SkillTreeGUI implements Listener {
         }
 
         if (maxLevel) {
-            lore.add(ChatColor.GOLD + "Level Maksimal Tercapai");
+            lore.add(LocaleManager.getInstance().getRawFormattedMessage("rpg.gui.skill-item.max-level"));
         } else if (canAfford) {
-            lore.add(ChatColor.GREEN + "Klik untuk meningkatkan!");
+            lore.add(LocaleManager.getInstance().getRawFormattedMessage("rpg.gui.skill-item.can-afford"));
         } else {
-            lore.add(ChatColor.RED + "Poin keahlian tidak cukup.");
+            lore.add(LocaleManager.getInstance().getRawFormattedMessage("rpg.gui.skill-item.cant-afford"));
         }
 
-        meta.lore(lore.stream().map(Component::text).collect(Collectors.toList()));
+        meta.lore(lore.stream().map(LegacyComponentSerializer.legacyAmpersand()::deserialize).collect(Collectors.toList()));
         item.setItemMeta(meta);
         return item;
     }
@@ -116,12 +137,12 @@ public class SkillTreeGUI implements Listener {
 
         // --- Pre-purchase Checks ---
         if (currentLevel >= skill.getMaxLevel()) {
-            player.sendMessage(Component.text("You have already maxed out this skill.").color(NamedTextColor.RED));
+            player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(LocaleManager.getInstance().getFormattedMessage("rpg.skill-max-level")));
             return;
         }
 
         if (stats.getSkillPoints() < skill.getCost()) {
-            player.sendMessage(Component.text("You do not have enough skill points.").color(NamedTextColor.RED));
+            player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(LocaleManager.getInstance().getFormattedMessage("rpg.not-enough-skill-points")));
             return;
         }
 
@@ -129,7 +150,7 @@ public class SkillTreeGUI implements Listener {
             if (stats.getSkillLevel(requiredSkillId) < 1) {
                 Skill requiredSkill = skillManager.getSkill(requiredSkillId);
                 String requiredSkillName = requiredSkill != null ? requiredSkill.getName() : "an unknown skill";
-                player.sendMessage(Component.text("You must unlock " + requiredSkillName + " first.").color(NamedTextColor.RED));
+                player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(LocaleManager.getInstance().getFormattedMessage("rpg.skill-unlock-required", "%skill_name%", requiredSkillName)));
                 return;
             }
         }
@@ -143,7 +164,7 @@ public class SkillTreeGUI implements Listener {
         statsManager.applyAllBonuses(player);
 
         // --- Feedback ---
-        player.sendMessage(Component.text("You have upgraded " + skill.getName() + " to Level " + (currentLevel + 1) + "!").color(NamedTextColor.GREEN));
+        player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(LocaleManager.getInstance().getFormattedMessage("rpg.skill-upgraded", "%skill_name%", skill.getName(), "%level%", String.valueOf(currentLevel + 1))));
         player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
 
         // Re-open the GUI to show the changes

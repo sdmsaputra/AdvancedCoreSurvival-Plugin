@@ -18,6 +18,7 @@ modules:
   party: true
   team: true
   placeholderapi: true
+  bank: true
 
 # --- Integration Settings ---
 integration:
@@ -114,14 +115,6 @@ rpg:
     exp-multiplier: 1.2
     # The number of skill points awarded to a player each time they level up.
     skill-points-per-level: 1
-    # --- Messages ---
-    # Message sent to the player when they level up.
-    # Placeholders: %player_name%, %new_level%
-    level-up-message: "&a&lCongratulations, %player_name%! You have reached Level %new_level%!"
-    # Message shown in the action bar when a player gains EXP.
-    # Placeholders: %gained_exp%, %current_exp%, %required_exp%, %exp_bar%
-    # Set to "" to disable.
-    exp-gain-action-bar: "&b+%gained_exp% EXP &7[&a%exp_bar%&7] &e%current_exp%&7/&e%required_exp%"
   stats:
     # The bonus damage applied per point of Strength.
     damage-per-strength: 0.5
@@ -192,3 +185,11 @@ rpg:
       CREEPER: 15.0
       ENDERMAN: 20.0
       BLAZE: 25.0
+
+bank:
+  # The cost to create a new bank.
+  creation-cost: 5000.0
+  # The maximum number of banks a single player can own.
+  max-banks-per-player: 1
+  # The maximum number of members a bank can have (excluding the owner).
+  max-members: 10

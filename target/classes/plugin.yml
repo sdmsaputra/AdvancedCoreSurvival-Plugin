@@ -98,8 +98,34 @@ commands:
   team:
     description: Manage your team.
     permission: advancedcoresurvival.team.base
+  bank:
+    description: Manage your bank account.
+    aliases: [b, ebank]
+    permission: advancedcoresurvival.bank.base
+    usage: /<command> [gui|balance|deposit|withdraw|create|delete|invite|kick|members]
 
 permissions:
+  advancedcoresurvival.bank.*:
+    description: Grants access to all bank features.
+    default: op
+    children:
+      advancedcoresurvival.bank.base: true
+      advancedcoresurvival.bank.create: true
+      advancedcoresurvival.bank.deposit: true
+      advancedcoresurvival.bank.withdraw: true
+      advancedcoresurvival.bank.balance: true
+      advancedcoresurvival.bank.invite: true
+      advancedcoresurvival.bank.kick: true
+      advancedcoresurvival.bank.admin: op
+  advancedcoresurvival.bank.base:
+    description: Allows basic usage of the /bank command.
+    default: true
+  advancedcoresurvival.bank.create:
+    description: Allows a player to create a bank.
+    default: true
+  advancedcoresurvival.bank.admin:
+    description: Allows admin-level bank operations.
+    default: op
   advancedcoresurvival.*:
     description: Grants access to all AdvancedCoreSurvival commands and features.
     default: op

@@ -1,8 +1,8 @@
 package com.minekarta.advancedcoresurvival.modules.essentials.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,13 +21,13 @@ public class HomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (!player.hasPermission("advancedcoresurvival.essentials.home")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
@@ -36,9 +36,9 @@ public class HomeCommand implements CommandExecutor {
             storageManager.getStorage().listHomes(player.getUniqueId()).thenAccept(homeList -> {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     if (homeList.isEmpty()) {
-                        player.sendMessage(ChatColor.YELLOW + "You have no homes set. Use /sethome <name> to set one.");
+                        player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.no-homes"));
                     } else {
-                        player.sendMessage(ChatColor.GREEN + "Your homes: " + ChatColor.WHITE + String.join(", ", homeList));
+                        player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.list", "%homelist%", String.join(", ", homeList)));
                     }
                 });
             });
@@ -50,9 +50,9 @@ public class HomeCommand implements CommandExecutor {
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (location != null) {
                     player.teleport(location);
-                    player.sendMessage(ChatColor.GREEN + "Teleporting to home '" + homeName + "'.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.teleporting", "%home%", homeName));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Home '" + homeName + "' not found.");
+                    player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.home.not-found", "%home%", homeName));
                 }
             });
         });

@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.modules.claims.tax;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -66,8 +67,11 @@ public class ClaimTaxManager {
                 // Withdraw tax
                 economy.withdrawPlayer(offlinePlayer, totalTax);
 
-                if (offlinePlayer.isOnline()) {
-                    offlinePlayer.getPlayer().sendMessage("§a$" + totalTax + " has been collected for your " + count + " claimed chunk(s).");
+                if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
+                    offlinePlayer.getPlayer().sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.tax.collected",
+                            "%tax%", String.valueOf(totalTax),
+                            "%count%", String.valueOf(count)
+                    ));
                 }
             }
             plugin.getLogger().info("Daily claim tax collection finished.");
@@ -77,15 +81,15 @@ public class ClaimTaxManager {
     private void handleTaxFailure(OfflinePlayer player, double taxDue) {
         String onFailure = plugin.getConfig().getString("claims.internal.tax.on-failure", "NONE").toUpperCase();
 
-        if (player.isOnline()) {
-            player.getPlayer().sendMessage("§cYou could not afford your daily claim tax of $" + taxDue + ".");
+        if (player.isOnline() && player.getPlayer() != null) {
+            player.getPlayer().sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.tax.failed", "%tax%", String.valueOf(taxDue)));
         }
 
         if (onFailure.equals("UNCLAIM_ALL")) {
             plugin.getLogger().info("Player " + player.getName() + " (" + player.getUniqueId() + ") failed to pay taxes. Unclaiming all their chunks.");
             plugin.getStorageManager().getStorage().unclaimAllChunks(player.getUniqueId()).thenRun(() -> {
-                if (player.isOnline()) {
-                    player.getPlayer().sendMessage("§cAs you could not afford the tax, all your claimed lands have been released.");
+                if (player.isOnline() && player.getPlayer() != null) {
+                    player.getPlayer().sendMessage(LocaleManager.getInstance().getFormattedMessage("claims.tax.unclaimed-all"));
                 }
             });
         }

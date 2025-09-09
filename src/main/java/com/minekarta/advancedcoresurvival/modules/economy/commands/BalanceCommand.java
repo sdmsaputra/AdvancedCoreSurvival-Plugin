@@ -1,8 +1,8 @@
 package com.minekarta.advancedcoresurvival.modules.economy.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,25 +22,25 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("advancedcoresurvival.economy.balance")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
         if (args.length == 0) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.RED + "Usage: /balance <player>");
+                sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.invalid-usage", "%usage%", "/balance <player>"));
                 return true;
             }
             Player player = (Player) sender;
             showBalance(player, player);
         } else {
             if (!sender.hasPermission("advancedcoresurvival.economy.balance.others")) {
-                sender.sendMessage(ChatColor.RED + "You don't have permission to check other players' balances.");
+                sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
                 return true;
             }
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
             if (target == null || !target.hasPlayedBefore()) {
-                sender.sendMessage(ChatColor.RED + "Player not found.");
+                sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.player-not-found", "%player%", args[0]));
                 return true;
             }
             showBalance(sender, target);
@@ -49,15 +49,15 @@ public class BalanceCommand implements CommandExecutor {
     }
 
     private void showBalance(CommandSender sender, OfflinePlayer target) {
-        plugin.getStorageManager().getStorage().getPlayerBalance(target.getUniqueId()).thenAccept(balance -> {
+        plugin.getStorageManager().getStorage().getPlayerBalance(target.getUniqueId(), "world").thenAccept(balance -> {
             String currencySymbol = plugin.getConfigManager().getCurrencySymbol();
             String formattedBalance = NumberFormat.getCurrencyInstance().format(balance).replace("$", currencySymbol);
 
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 if (sender == target) {
-                    sender.sendMessage(ChatColor.GREEN + "Your balance: " + ChatColor.WHITE + formattedBalance);
+                    sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("economy.balance.self", "%balance%", formattedBalance));
                 } else {
-                    sender.sendMessage(ChatColor.GREEN + target.getName() + "'s balance: " + ChatColor.WHITE + formattedBalance);
+                    sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("economy.balance.other", "%player%", target.getName(), "%balance%", formattedBalance));
                 }
             });
         });

@@ -1,8 +1,8 @@
 package com.minekarta.advancedcoresurvival.modules.essentials.commands;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,13 +22,13 @@ public class SetSpawnCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "This command can only be run by a player.");
+            sender.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.must-be-player"));
             return true;
         }
 
         Player player = (Player) sender;
         if (!player.hasPermission("advancedcoresurvival.essentials.setspawn")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(LocaleManager.getInstance().getFormattedMessage("general.no-permission"));
             return true;
         }
 
@@ -37,7 +37,7 @@ public class SetSpawnCommand implements CommandExecutor {
         storageManager.getStorage().setSpawnLocation(spawnLocation).thenRun(() -> {
             // This part runs on the main server thread after the async operation is complete
             plugin.getServer().getScheduler().runTask(plugin, () -> {
-                player.sendMessage(ChatColor.GREEN + "Server spawn location has been set to your current position.");
+                player.sendMessage(LocaleManager.getInstance().getFormattedMessage("essentials.spawn.set-success"));
             });
         });
 

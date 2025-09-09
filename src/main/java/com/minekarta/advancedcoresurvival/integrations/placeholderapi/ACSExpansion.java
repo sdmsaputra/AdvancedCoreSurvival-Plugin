@@ -65,8 +65,11 @@ public class ACSExpansion extends PlaceholderExpansion {
             // For now, we'll block and wait for the result. This is not ideal for performance.
             // A better solution would involve caching.
             try {
-                double balance = plugin.getStorageManager().getStorage().getPlayerBalance(player.getUniqueId()).get();
-                return String.format("%.2f", balance);
+                if (player.isOnline()) {
+                    double balance = plugin.getStorageManager().getStorage().getPlayerBalance(player.getUniqueId(), player.getPlayer().getWorld().getName()).get();
+                    return String.format("%.2f", balance);
+                }
+                return "0.00"; // Can't get world for offline player here
             } catch (Exception e) {
                 return "Error";
             }
