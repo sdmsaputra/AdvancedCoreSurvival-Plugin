@@ -20,6 +20,7 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/tax/ClaimTaxManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/essentials/commands/DelHomeCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/integrations/vault/VaultHook.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/gui/BankGUIHolder.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/commands/BankCommand.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/listeners/WoodcuttingSkillListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/commands/RPGCommand.java
@@ -29,6 +30,7 @@
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/claims/ClaimProtectionListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/integrations/placeholderapi/ACSExpansion.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/storage/SQLiteStorage.java
+/app/src/main/java/com/minekarta/advancedcoresurvival/modules/bank/gui/BankGUIListener.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/leveling/LevelingManager.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/modules/rpg/ui/SkillTreeGUI.java
 /app/src/main/java/com/minekarta/advancedcoresurvival/core/modules/ModuleManager.java

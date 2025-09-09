@@ -120,6 +120,12 @@ public class MySQLStorage implements Storage {
                         "FOREIGN KEY(bank_id) REFERENCES banks(id) ON DELETE CASCADE" +
                         ");";
 
+                String bankInvitesSql = "CREATE TABLE IF NOT EXISTS acs_bank_invites (" +
+                        "bank_id INT NOT NULL," +
+                        "invited_uuid VARCHAR(36) NOT NULL PRIMARY KEY," +
+                        "FOREIGN KEY(bank_id) REFERENCES acs_banks(id) ON DELETE CASCADE" +
+                        ");";
+
                 String playerStatsSql = "CREATE TABLE IF NOT EXISTS player_stats (" +
                         "uuid VARCHAR(36) PRIMARY KEY NOT NULL," +
                         "level INT NOT NULL DEFAULT 1," +
@@ -145,6 +151,7 @@ public class MySQLStorage implements Storage {
                 statement.addBatch(claimMembersSql);
                 statement.addBatch(banksSql);
                 statement.addBatch(bankMembersSql);
+                statement.addBatch(bankInvitesSql);
                 statement.addBatch(playerStatsSql);
                 statement.addBatch(playerSkillsSql);
 
@@ -730,5 +737,42 @@ public class MySQLStorage implements Storage {
     @FunctionalInterface
     interface SQLConsumer {
         void accept(Connection conn) throws SQLException;
+    }
+
+    // --- Bank Invite Methods ---
+
+    @Override
+    public CompletableFuture<Void> addBankInvite(int bankId, UUID invitedUUID) {
+        return runAsync(conn -> {
+            String sql = "INSERT INTO acs_bank_invites (bank_id, invited_uuid) VALUES (?, ?) ON DUPLICATE KEY UPDATE bank_id = VALUES(bank_id);";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, bankId);
+                pstmt.setString(2, invitedUUID.toString());
+                pstmt.executeUpdate();
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Integer> getBankInvite(UUID invitedUUID) {
+        return supplyAsync(conn -> {
+            String sql = "SELECT bank_id FROM acs_bank_invites WHERE invited_uuid = ?;";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, invitedUUID.toString());
+                ResultSet rs = pstmt.executeQuery();
+                return rs.next() ? rs.getInt("bank_id") : -1;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> removeBankInvite(UUID invitedUUID) {
+        return runAsync(conn -> {
+            String sql = "DELETE FROM acs_bank_invites WHERE invited_uuid = ?;";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, invitedUUID.toString());
+                pstmt.executeUpdate();
+            }
+        });
     }
 }
