@@ -30,8 +30,8 @@ com/minekarta/advancedcoresurvival/core/storage/MySQLStorage$SQLSupplier.class
 com/minekarta/advancedcoresurvival/modules/essentials/commands/SetHomeCommand.class
 com/minekarta/advancedcoresurvival/modules/rpg/commands/RPGCommand.class
 com/minekarta/advancedcoresurvival/modules/essentials/commands/HomeCommand.class
-com/minekarta/advancedcoresurvival/modules/rpg/listeners/CombatSkillListener.class
 com/minekarta/advancedcoresurvival/api/events/ACSBalanceChangeEvent.class
+com/minekarta/advancedcoresurvival/modules/rpg/listeners/CombatSkillListener.class
 com/minekarta/advancedcoresurvival/core/storage/StorageManager.class
 com/minekarta/advancedcoresurvival/modules/essentials/commands/DelHomeCommand.class
 com/minekarta/advancedcoresurvival/modules/rpg/data/PlayerStatsManager.class
@@ -39,8 +39,8 @@ com/minekarta/advancedcoresurvival/core/config/ConfigManager.class
 com/minekarta/advancedcoresurvival/modules/economy/commands/BalanceCommand.class
 com/minekarta/advancedcoresurvival/integrations/vault/VaultHook.class
 com/minekarta/advancedcoresurvival/modules/rpg/RPGModule.class
-com/minekarta/advancedcoresurvival/integrations/placeholderapi/ACSExpansion.class
 com/minekarta/advancedcoresurvival/core/storage/MySQLStorage$SQLConsumer.class
+com/minekarta/advancedcoresurvival/integrations/placeholderapi/ACSExpansion.class
 com/minekarta/advancedcoresurvival/modules/claims/ClaimsModule.class
 com/minekarta/advancedcoresurvival/core/storage/SQLiteStorage.class
 com/minekarta/advancedcoresurvival/modules/essentials/EssentialsModule.class

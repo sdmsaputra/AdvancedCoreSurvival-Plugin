@@ -1,8 +1,10 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.listeners;
 
+import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.leveling.LevelingManager;
+import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -60,7 +62,12 @@ public class CombatSkillListener implements Listener {
                 double dodgeChance = victimStats.getAgility() * dodgeChancePerAgility;
                 if (ThreadLocalRandom.current().nextDouble() < dodgeChance) {
                     event.setCancelled(true);
-                    // TODO: Add a "dodge" message or sound effect
+                    // Send dodge feedback
+                    String dodgeMessage = LocaleManager.getInstance().getFormattedMessage("rpg.dodge-message");
+                    if (!dodgeMessage.isEmpty()) {
+                        victim.sendMessage(dodgeMessage);
+                    }
+                    victim.playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
                     return; // Stop processing damage if dodged
                 }
             }
