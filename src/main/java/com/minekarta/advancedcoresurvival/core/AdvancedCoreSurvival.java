@@ -4,6 +4,8 @@ import com.minekarta.advancedcoresurvival.core.config.ConfigManager;
 import com.minekarta.advancedcoresurvival.core.locale.LocaleManager;
 import com.minekarta.advancedcoresurvival.core.modules.ModuleManager;
 import com.minekarta.advancedcoresurvival.core.storage.StorageManager;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class AdvancedCoreSurvival extends JavaPlugin {
@@ -11,6 +13,7 @@ public final class AdvancedCoreSurvival extends JavaPlugin {
     private ConfigManager configManager;
     private StorageManager storageManager;
     private ModuleManager moduleManager;
+    private Economy economy = null;
 
     @Override
     public void onEnable() {
@@ -41,7 +44,26 @@ public final class AdvancedCoreSurvival extends JavaPlugin {
         // Register core commands
         getCommand("advancedcoresurvival").setExecutor(new com.minekarta.advancedcoresurvival.core.commands.AdminCommand(this));
 
+        // Step 5: Setup Economy from Vault
+        if (!setupEconomy()) {
+            getLogger().severe("Vault not found or no economy provider! Economy features will be limited.");
+        } else {
+            getLogger().info("Successfully hooked into Vault economy.");
+        }
+
         getLogger().info("AdvancedCoreSurvival has been enabled successfully!");
+    }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        economy = rsp.getProvider();
+        return economy != null;
     }
 
     @Override
@@ -67,5 +89,9 @@ public final class AdvancedCoreSurvival extends JavaPlugin {
 
     public ModuleManager getModuleManager() {
         return moduleManager;
+    }
+
+    public Economy getEconomy() {
+        return economy;
     }
 }

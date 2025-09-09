@@ -127,6 +127,13 @@ public class SQLiteStorage implements Storage {
                         ");";
                 statement.execute(bankMembersSql);
 
+                String bankInvitesSql = "CREATE TABLE IF NOT EXISTS acs_bank_invites (" +
+                        "bank_id INTEGER NOT NULL," +
+                        "invited_uuid TEXT NOT NULL PRIMARY KEY," +
+                        "FOREIGN KEY(bank_id) REFERENCES acs_banks(id) ON DELETE CASCADE" +
+                        ");";
+                statement.execute(bankInvitesSql);
+
                 // --- RPG Tables ---
 
                 // Player RPG stats table
@@ -858,6 +865,48 @@ public class SQLiteStorage implements Storage {
                 plugin.getLogger().log(Level.SEVERE, "Error listing banks", e);
             }
             return bankNames;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> addBankInvite(int bankId, UUID invitedUUID) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "INSERT OR REPLACE INTO acs_bank_invites (bank_id, invited_uuid) VALUES (?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, bankId);
+                pstmt.setString(2, invitedUUID.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error adding bank invite for " + invitedUUID, e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Integer> getBankInvite(UUID invitedUUID) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT bank_id FROM acs_bank_invites WHERE invited_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, invitedUUID.toString());
+                ResultSet rs = pstmt.executeQuery();
+                return rs.next() ? rs.getInt("bank_id") : -1;
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error getting bank invite for " + invitedUUID, e);
+                return -1;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> removeBankInvite(UUID invitedUUID) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "DELETE FROM acs_bank_invites WHERE invited_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, invitedUUID.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error removing bank invite for " + invitedUUID, e);
+            }
         });
     }
 }
