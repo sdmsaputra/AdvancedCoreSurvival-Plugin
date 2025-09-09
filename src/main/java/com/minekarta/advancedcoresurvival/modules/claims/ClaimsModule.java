@@ -29,6 +29,10 @@ public class ClaimsModule implements Module {
         plugin.getServer().getPluginManager().registerEvents(new ClaimProtectionListener(plugin), plugin);
     }
 
+    public ClaimTaxManager getTaxManager() {
+        return taxManager;
+    }
+
     @Override
     public void onDisable() {
         if (taxManager != null) {

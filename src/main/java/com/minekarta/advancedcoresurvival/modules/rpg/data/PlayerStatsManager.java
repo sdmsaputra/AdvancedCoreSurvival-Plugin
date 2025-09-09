@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.modules.rpg.data;
 
 import org.bukkit.Bukkit;
+import com.minekarta.advancedcoresurvival.core.storage.Storage;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -17,9 +18,11 @@ public class PlayerStatsManager {
 
     private final Map<UUID, PlayerStats> statsCache = new ConcurrentHashMap<>();
     private final double healthPerEndurance;
+    private final Storage storage;
 
-    public PlayerStatsManager(FileConfiguration config) {
+    public PlayerStatsManager(FileConfiguration config, Storage storage) {
         this.healthPerEndurance = config.getDouble("rpg.stats.health-per-endurance", 1.0);
+        this.storage = storage;
     }
 
     /**
@@ -54,10 +57,10 @@ public class PlayerStatsManager {
      * @return The newly created PlayerStats object.
      */
     public PlayerStats loadPlayerStats(UUID uuid) {
-        // In the future, this would load from a database (e.g., SQLite, MySQL)
-        // For now, we just create fresh stats.
-        PlayerStats newStats = new PlayerStats(uuid);
-        statsCache.put(uuid, newStats);
+        // This is a blocking call for simplicity. In a high-performance scenario,
+        // this should be handled asynchronously with callbacks or futures.
+        PlayerStats stats = storage.loadPlayerStats(uuid).join();
+        statsCache.put(uuid, stats);
 
         // Apply health bonus if the player is online
         Player player = Bukkit.getPlayer(uuid);
@@ -65,20 +68,18 @@ public class PlayerStatsManager {
             applyAllBonuses(player);
         }
 
-        return newStats;
+        return stats;
     }
 
     /**
-     * Saves a player's stats from the cache.
-     * In the future, this will write the data to the database.
+     * Saves a player's stats from the cache to the database.
      *
      * @param uuid The UUID of the player to save.
      */
     public void savePlayerStats(UUID uuid) {
         PlayerStats stats = statsCache.get(uuid);
         if (stats != null) {
-            // In the future, save the 'stats' object to the database here.
-            System.out.println("Simulating save for player " + uuid);
+            storage.savePlayerStats(stats);
         }
     }
 

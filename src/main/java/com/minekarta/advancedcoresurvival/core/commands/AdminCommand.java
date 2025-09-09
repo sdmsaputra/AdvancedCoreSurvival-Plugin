@@ -4,14 +4,17 @@ import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
 import com.minekarta.advancedcoresurvival.core.modules.ModuleManager;
 import com.minekarta.advancedcoresurvival.modules.claims.ClaimsModule;
 import com.minekarta.advancedcoresurvival.modules.claims.tax.ClaimTaxManager;
+import com.minekarta.advancedcoresurvival.modules.rpg.RPGModule;
+import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
+import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-
-import java.lang.reflect.Field;
 
 public class AdminCommand implements CommandExecutor {
 
@@ -26,16 +29,71 @@ public class AdminCommand implements CommandExecutor {
         if (args.length == 0) {
             sender.sendMessage(Component.text("AdvancedCoreSurvival Admin").color(NamedTextColor.GOLD));
             sender.sendMessage(Component.text("/acs runtax - Manually run the claim tax collection.").color(NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/acs stats <player> <stat> <value> - Set a player's stat.").color(NamedTextColor.GRAY));
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
-        if (subCommand.equals("runtax")) {
-            handleRunTax(sender);
-            return true;
+        switch (subCommand) {
+            case "runtax":
+                handleRunTax(sender);
+                return true;
+            case "stats":
+                handleStats(sender, args);
+                return true;
         }
 
         return true;
+    }
+
+    private void handleStats(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("advancedcoresurvival.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to do that.").color(NamedTextColor.RED));
+            return;
+        }
+
+        if (args.length != 4) {
+            sender.sendMessage(Component.text("Usage: /acs stats <player> <stat> <value>").color(NamedTextColor.RED));
+            return;
+        }
+
+        OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
+        String statName = args[2].toLowerCase();
+        int value;
+        try {
+            value = Integer.parseInt(args[3]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(Component.text("Value must be a number.").color(NamedTextColor.RED));
+            return;
+        }
+
+        plugin.getModuleManager().getModule("rpg").ifPresentOrElse(module -> {
+            RPGModule rpgModule = (RPGModule) module;
+            PlayerStatsManager statsManager = rpgModule.getStatsManager();
+            PlayerStats stats = statsManager.getPlayerStats(player.getUniqueId());
+
+            boolean statChanged = false;
+            switch (statName) {
+                case "endurance":
+                    stats.setEndurance(value);
+                    statChanged = true;
+                    break;
+                // Add other stats here in the future
+                default:
+                    sender.sendMessage(Component.text("Unknown stat: " + statName).color(NamedTextColor.RED));
+                    return;
+            }
+
+            if (statChanged) {
+                statsManager.savePlayerStats(player.getUniqueId());
+                if (player.isOnline()) {
+                    statsManager.applyAllBonuses(player.getPlayer());
+                }
+                sender.sendMessage(Component.text(player.getName() + "'s " + statName + " set to " + value + ".").color(NamedTextColor.GREEN));
+            }
+        }, () -> {
+            sender.sendMessage(Component.text("RPG module is not enabled.").color(NamedTextColor.RED));
+        });
     }
 
     private void handleRunTax(CommandSender sender) {
@@ -46,31 +104,19 @@ public class AdminCommand implements CommandExecutor {
 
         sender.sendMessage(Component.text("Manually starting claim tax collection...").color(NamedTextColor.YELLOW));
 
-        // This is tricky because the tax manager is private inside ClaimsModule.
-        // A proper solution would use a getter or a central registry.
-        // For now, we will use reflection as a workaround.
-        try {
-            ModuleManager moduleManager = plugin.getModuleManager();
-            ClaimsModule claimsModule = (ClaimsModule) moduleManager.getModule("claims").orElse(null);
-            if (claimsModule == null) {
-                sender.sendMessage(Component.text("Claims module is not enabled.").color(NamedTextColor.RED));
-                return;
+        // Get the ClaimsModule and its TaxManager directly
+        plugin.getModuleManager().getModule("claims").ifPresentOrElse(module -> {
+            ClaimsModule claimsModule = (ClaimsModule) module;
+            ClaimTaxManager taxManager = claimsModule.getTaxManager();
+
+            if (taxManager != null) {
+                taxManager.collectTaxes();
+                sender.sendMessage(Component.text("Tax collection process started asynchronously. Check console for details.").color(NamedTextColor.GREEN));
+            } else {
+                sender.sendMessage(Component.text("ClaimTaxManager is not available.").color(NamedTextColor.RED));
             }
-
-            Field taxManagerField = ClaimsModule.class.getDeclaredField("taxManager");
-            taxManagerField.setAccessible(true);
-            ClaimTaxManager taxManager = (ClaimTaxManager) taxManagerField.get(claimsModule);
-
-            // We need to call the private collectTaxes method, also with reflection.
-            java.lang.reflect.Method collectTaxesMethod = ClaimTaxManager.class.getDeclaredMethod("collectTaxes");
-            collectTaxesMethod.setAccessible(true);
-            collectTaxesMethod.invoke(taxManager);
-
-            sender.sendMessage(Component.text("Tax collection process started asynchronously. Check console for details.").color(NamedTextColor.GREEN));
-
-        } catch (Exception e) {
-            sender.sendMessage(Component.text("An error occurred while running the tax collector. See console.").color(NamedTextColor.RED));
-            e.printStackTrace();
-        }
+        }, () -> {
+            sender.sendMessage(Component.text("Claims module is not enabled.").color(NamedTextColor.RED));
+        });
     }
 }

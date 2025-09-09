@@ -45,7 +45,7 @@ public class ClaimTaxManager {
         }
     }
 
-    private void collectTaxes() {
+    public void collectTaxes() {
         plugin.getLogger().info("Starting daily claim tax collection...");
         double taxPerChunk = plugin.getConfig().getDouble("claims.internal.tax.cost-per-chunk-per-day");
 

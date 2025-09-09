@@ -1,6 +1,7 @@
 package com.minekarta.advancedcoresurvival.core.storage;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
+import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
@@ -58,8 +59,10 @@ public class SQLiteStorage implements Storage {
         try (Statement statement = connection.createStatement()) {
             // Player data table (for economy, etc.)
             String playerDataSql = "CREATE TABLE IF NOT EXISTS player_data (" +
-                                   "uuid TEXT PRIMARY KEY NOT NULL," +
-                                   "balance REAL NOT NULL DEFAULT 0.0" +
+                                   "uuid TEXT NOT NULL," +
+                                   "world TEXT NOT NULL," +
+                                   "balance REAL NOT NULL DEFAULT 0.0," +
+                                   "PRIMARY KEY (uuid, world)" +
                                    ");";
             statement.execute(playerDataSql);
 
@@ -105,6 +108,31 @@ public class SQLiteStorage implements Storage {
                                      ");";
             statement.execute(claimMembersSql);
 
+            // Bank tables
+            String banksSql = "CREATE TABLE IF NOT EXISTS banks (" +
+                              "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                              "name TEXT NOT NULL UNIQUE," +
+                              "owner_uuid TEXT NOT NULL," +
+                              "balance REAL NOT NULL DEFAULT 0.0" +
+                              ");";
+            statement.execute(banksSql);
+
+            String bankMembersSql = "CREATE TABLE IF NOT EXISTS bank_members (" +
+                                    "bank_id INTEGER NOT NULL," +
+                                    "member_uuid TEXT NOT NULL," +
+                                    "PRIMARY KEY (bank_id, member_uuid)," +
+                                    "FOREIGN KEY(bank_id) REFERENCES banks(id) ON DELETE CASCADE" +
+                                    ");";
+            statement.execute(bankMembersSql);
+
+            // Player RPG stats table
+            String playerStatsSql = "CREATE TABLE IF NOT EXISTS player_stats (" +
+                                    "uuid TEXT PRIMARY KEY NOT NULL," +
+                                    "endurance INTEGER NOT NULL DEFAULT 0," +
+                                    "FOREIGN KEY(uuid) REFERENCES player_data(uuid) ON DELETE CASCADE" +
+                                    ");";
+            statement.execute(playerStatsSql);
+
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create database tables!", e);
         }
@@ -131,37 +159,37 @@ public class SQLiteStorage implements Storage {
     }
 
     @Override
-    public CompletableFuture<Double> getPlayerBalance(UUID playerUUID) {
+    public CompletableFuture<Double> getPlayerBalance(UUID playerUUID, String worldName) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "SELECT balance FROM player_data WHERE uuid = ?;";
+            String sql = "SELECT balance FROM player_data WHERE uuid = ? AND world = ?;";
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, playerUUID.toString());
+                pstmt.setString(2, worldName);
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     return rs.getDouble("balance");
                 } else {
-                    // Player doesn't exist in DB yet, return default
+                    // Player doesn't exist in DB yet for this world, return default
                     return 0.0;
                 }
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Error fetching player balance for " + playerUUID, e);
+                plugin.getLogger().log(Level.SEVERE, "Error fetching player balance for " + playerUUID + " in world " + worldName, e);
                 return 0.0;
             }
         });
     }
 
     @Override
-    public CompletableFuture<Void> setPlayerBalance(UUID playerUUID, double balance) {
+    public CompletableFuture<Void> setPlayerBalance(UUID playerUUID, String worldName, double balance) {
         return CompletableFuture.runAsync(() -> {
-            // "INSERT OR REPLACE" is a convenient SQLite-specific command.
-            // For MySQL, this would be "INSERT ... ON DUPLICATE KEY UPDATE".
-            String sql = "INSERT OR REPLACE INTO player_data (uuid, balance) VALUES (?, ?);";
+            String sql = "INSERT OR REPLACE INTO player_data (uuid, world, balance) VALUES (?, ?, ?);";
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, playerUUID.toString());
-                pstmt.setDouble(2, balance);
+                pstmt.setString(2, worldName);
+                pstmt.setDouble(3, balance);
                 pstmt.executeUpdate();
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Error setting player balance for " + playerUUID, e);
+                plugin.getLogger().log(Level.SEVERE, "Error setting player balance for " + playerUUID + " in world " + worldName, e);
             }
         });
     }
@@ -507,6 +535,219 @@ public class SQLiteStorage implements Storage {
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Error unclaiming all chunks for " + ownerUUID, e);
             }
+        });
+    }
+
+    // --- RPG Stats ---
+
+    @Override
+    public CompletableFuture<Void> savePlayerStats(PlayerStats stats) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "INSERT OR REPLACE INTO player_stats (uuid, endurance) VALUES (?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, stats.getPlayerUUID().toString());
+                pstmt.setInt(2, stats.getEndurance());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error saving player stats for " + stats.getPlayerUUID(), e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<PlayerStats> loadPlayerStats(UUID playerUUID) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT endurance FROM player_stats WHERE uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, playerUUID.toString());
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    PlayerStats stats = new PlayerStats(playerUUID);
+                    stats.setEndurance(rs.getInt("endurance"));
+                    // In the future, this is where you would load other stats like strength, agility, etc.
+                    return stats;
+                } else {
+                    // Player has no stats saved yet, return a fresh new PlayerStats object
+                    return new PlayerStats(playerUUID);
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error loading player stats for " + playerUUID, e);
+                // Return new stats on error to prevent data loss
+                return new PlayerStats(playerUUID);
+            }
+        });
+    }
+
+    // --- Bank Methods ---
+
+    @Override
+    public CompletableFuture<Boolean> hasBank(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT id FROM banks WHERE name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                return pstmt.executeQuery().next();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error checking for bank " + name, e);
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> createBank(String name, UUID owner) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "INSERT INTO banks (name, owner_uuid) VALUES (?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                pstmt.setString(2, owner.toString());
+                pstmt.executeUpdate();
+                return true;
+            } catch (SQLException e) {
+                // It might fail if the name is not unique, which is expected.
+                plugin.getLogger().log(Level.WARNING, "Could not create bank " + name + ": " + e.getMessage());
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> deleteBank(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "DELETE FROM banks WHERE name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                return pstmt.executeUpdate() > 0;
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error deleting bank " + name, e);
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Double> getBankBalance(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT balance FROM banks WHERE name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getDouble("balance");
+                }
+                return 0.0;
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error getting balance for bank " + name, e);
+                return 0.0;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> setBankBalance(String name, double balance) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = "UPDATE banks SET balance = ? WHERE name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setDouble(1, balance);
+                pstmt.setString(2, name);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error setting balance for bank " + name, e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isBankOwner(String name, UUID player) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT id FROM banks WHERE name = ? AND owner_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                pstmt.setString(2, player.toString());
+                return pstmt.executeQuery().next();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error checking owner for bank " + name, e);
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isBankMember(String name, UUID player) {
+        return CompletableFuture.supplyAsync(() -> {
+            // This query is a bit more complex. We need to get the bank_id first.
+            String sql = "SELECT bm.bank_id FROM bank_members bm JOIN banks b ON bm.bank_id = b.id WHERE b.name = ? AND bm.member_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                pstmt.setString(2, player.toString());
+                return pstmt.executeQuery().next();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error checking member for bank " + name, e);
+                return false;
+            }
+        });
+    }
+
+    private CompletableFuture<Integer> getBankId(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT id FROM banks WHERE name = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, name);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+                return -1; // Not found
+            } catch (SQLException e) {
+                return -1;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> addBankMember(String name, UUID player) {
+        return getBankId(name).thenAcceptAsync(bankId -> {
+            if (bankId == -1) return;
+            String sql = "INSERT OR IGNORE INTO bank_members (bank_id, member_uuid) VALUES (?, ?);";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, bankId);
+                pstmt.setString(2, player.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error adding member to bank " + name, e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> removeBankMember(String name, UUID player) {
+        return getBankId(name).thenAcceptAsync(bankId -> {
+            if (bankId == -1) return;
+            String sql = "DELETE FROM bank_members WHERE bank_id = ? AND member_uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, bankId);
+                pstmt.setString(2, player.toString());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error removing member from bank " + name, e);
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getBanks() {
+        return CompletableFuture.supplyAsync(() -> {
+            List<String> bankNames = new ArrayList<>();
+            String sql = "SELECT name FROM banks;";
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    bankNames.add(rs.getString("name"));
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Error listing banks", e);
+            }
+            return bankNames;
         });
     }
 }

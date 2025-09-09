@@ -2,6 +2,7 @@ package com.minekarta.advancedcoresurvival.modules.rpg;
 
 import com.minekarta.advancedcoresurvival.core.AdvancedCoreSurvival;
 import com.minekarta.advancedcoresurvival.core.modules.Module;
+import com.minekarta.advancedcoresurvival.core.storage.Storage;
 import com.minekarta.advancedcoresurvival.modules.rpg.commands.RPGCommand;
 import com.minekarta.advancedcoresurvival.modules.rpg.data.PlayerStatsManager;
 import com.minekarta.advancedcoresurvival.modules.rpg.leveling.LevelingManager;
@@ -30,8 +31,11 @@ public class RPGModule implements Module {
     public void onEnable(AdvancedCoreSurvival plugin) {
         plugin.getLogger().info("Initializing RPG Module...");
 
+        // Get storage manager
+        Storage storage = plugin.getStorageManager().getStorage();
+
         // Initialize managers
-        this.statsManager = new PlayerStatsManager(plugin.getConfig());
+        this.statsManager = new PlayerStatsManager(plugin.getConfig(), storage);
         this.skillManager = new SkillManager(plugin);
         this.levelingManager = new LevelingManager(statsManager, plugin.getConfig());
 
@@ -52,6 +56,10 @@ public class RPGModule implements Module {
         for (Player player : Bukkit.getOnlinePlayers()) {
             statsManager.getPlayerStats(player);
         }
+    }
+
+    public PlayerStatsManager getStatsManager() {
+        return statsManager;
     }
 
     @Override
