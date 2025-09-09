@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -55,86 +56,127 @@ public class SQLiteStorage implements Storage {
     }
 
     private void initializeTables() {
-        // Using try-with-resources to ensure the statement is closed automatically
-        try (Statement statement = connection.createStatement()) {
-            // Player data table (for economy, etc.)
-            String playerDataSql = "CREATE TABLE IF NOT EXISTS player_data (" +
-                                   "uuid TEXT NOT NULL," +
-                                   "world TEXT NOT NULL," +
-                                   "balance REAL NOT NULL DEFAULT 0.0," +
-                                   "PRIMARY KEY (uuid, world)" +
-                                   ");";
-            statement.execute(playerDataSql);
+        try {
+            // Using try-with-resources to ensure the statement is closed automatically
+            try (Statement statement = connection.createStatement()) {
+                // Player data table (for economy, etc.)
+                String playerDataSql = "CREATE TABLE IF NOT EXISTS player_data (" +
+                        "uuid TEXT NOT NULL," +
+                        "world TEXT NOT NULL," +
+                        "balance REAL NOT NULL DEFAULT 0.0," +
+                        "PRIMARY KEY (uuid, world)" +
+                        ");";
+                statement.execute(playerDataSql);
 
-            // Server data table (for spawn location, etc.)
-            String serverDataSql = "CREATE TABLE IF NOT EXISTS server_data (" +
-                                   "key TEXT PRIMARY KEY NOT NULL," +
-                                   "value TEXT NOT NULL" +
-                                   ");";
-            statement.execute(serverDataSql);
+                // Server data table (for spawn location, etc.)
+                String serverDataSql = "CREATE TABLE IF NOT EXISTS server_data (" +
+                        "key TEXT PRIMARY KEY NOT NULL," +
+                        "value TEXT NOT NULL" +
+                        ");";
+                statement.execute(serverDataSql);
 
-            // Player homes table
-            String playerHomesSql = "CREATE TABLE IF NOT EXISTS player_homes (" +
-                                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                                    "uuid TEXT NOT NULL," +
-                                    "name TEXT NOT NULL," +
-                                    "world TEXT NOT NULL," +
-                                    "x REAL NOT NULL," +
-                                    "y REAL NOT NULL," +
-                                    "z REAL NOT NULL," +
-                                    "yaw REAL NOT NULL," +
-                                    "pitch REAL NOT NULL," +
-                                    "UNIQUE(uuid, name)" +
-                                    ");";
-            statement.execute(playerHomesSql);
+                // Player homes table
+                String playerHomesSql = "CREATE TABLE IF NOT EXISTS player_homes (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "uuid TEXT NOT NULL," +
+                        "name TEXT NOT NULL," +
+                        "world TEXT NOT NULL," +
+                        "x REAL NOT NULL," +
+                        "y REAL NOT NULL," +
+                        "z REAL NOT NULL," +
+                        "yaw REAL NOT NULL," +
+                        "pitch REAL NOT NULL," +
+                        "UNIQUE(uuid, name)" +
+                        ");";
+                statement.execute(playerHomesSql);
 
-            // Claims table
-            String claimsSql = "CREATE TABLE IF NOT EXISTS claims (" +
-                               "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                               "owner_uuid TEXT NOT NULL," +
-                               "world TEXT NOT NULL," +
-                               "chunk_x INTEGER NOT NULL," +
-                               "chunk_z INTEGER NOT NULL," +
-                               "UNIQUE(world, chunk_x, chunk_z)" +
-                               ");";
-            statement.execute(claimsSql);
+                // Claims table
+                String claimsSql = "CREATE TABLE IF NOT EXISTS claims (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "owner_uuid TEXT NOT NULL," +
+                        "world TEXT NOT NULL," +
+                        "chunk_x INTEGER NOT NULL," +
+                        "chunk_z INTEGER NOT NULL," +
+                        "UNIQUE(world, chunk_x, chunk_z)" +
+                        ");";
+                statement.execute(claimsSql);
 
-            // Claim members/trusted players table
-            String claimMembersSql = "CREATE TABLE IF NOT EXISTS claim_members (" +
-                                     "claim_id INTEGER NOT NULL," +
-                                     "member_uuid TEXT NOT NULL," +
-                                     "PRIMARY KEY (claim_id, member_uuid)," +
-                                     "FOREIGN KEY(claim_id) REFERENCES claims(id) ON DELETE CASCADE" +
-                                     ");";
-            statement.execute(claimMembersSql);
+                // Claim members/trusted players table
+                String claimMembersSql = "CREATE TABLE IF NOT EXISTS claim_members (" +
+                        "claim_id INTEGER NOT NULL," +
+                        "member_uuid TEXT NOT NULL," +
+                        "PRIMARY KEY (claim_id, member_uuid)," +
+                        "FOREIGN KEY(claim_id) REFERENCES claims(id) ON DELETE CASCADE" +
+                        ");";
+                statement.execute(claimMembersSql);
 
-            // Bank tables
-            String banksSql = "CREATE TABLE IF NOT EXISTS banks (" +
-                              "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                              "name TEXT NOT NULL UNIQUE," +
-                              "owner_uuid TEXT NOT NULL," +
-                              "balance REAL NOT NULL DEFAULT 0.0" +
-                              ");";
-            statement.execute(banksSql);
+                // Bank tables
+                String banksSql = "CREATE TABLE IF NOT EXISTS banks (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "name TEXT NOT NULL UNIQUE," +
+                        "owner_uuid TEXT NOT NULL," +
+                        "balance REAL NOT NULL DEFAULT 0.0" +
+                        ");";
+                statement.execute(banksSql);
 
-            String bankMembersSql = "CREATE TABLE IF NOT EXISTS bank_members (" +
-                                    "bank_id INTEGER NOT NULL," +
-                                    "member_uuid TEXT NOT NULL," +
-                                    "PRIMARY KEY (bank_id, member_uuid)," +
-                                    "FOREIGN KEY(bank_id) REFERENCES banks(id) ON DELETE CASCADE" +
-                                    ");";
-            statement.execute(bankMembersSql);
+                String bankMembersSql = "CREATE TABLE IF NOT EXISTS bank_members (" +
+                        "bank_id INTEGER NOT NULL," +
+                        "member_uuid TEXT NOT NULL," +
+                        "PRIMARY KEY (bank_id, member_uuid)," +
+                        "FOREIGN KEY(bank_id) REFERENCES banks(id) ON DELETE CASCADE" +
+                        ");";
+                statement.execute(bankMembersSql);
 
-            // Player RPG stats table
-            String playerStatsSql = "CREATE TABLE IF NOT EXISTS player_stats (" +
-                                    "uuid TEXT PRIMARY KEY NOT NULL," +
-                                    "endurance INTEGER NOT NULL DEFAULT 0," +
-                                    "FOREIGN KEY(uuid) REFERENCES player_data(uuid) ON DELETE CASCADE" +
-                                    ");";
-            statement.execute(playerStatsSql);
+                // --- RPG Tables ---
+
+                // Player RPG stats table
+                String playerStatsSql = "CREATE TABLE IF NOT EXISTS player_stats (uuid TEXT PRIMARY KEY NOT NULL);";
+                statement.execute(playerStatsSql);
+
+                // Player skills table (many-to-one relationship with player_stats)
+                String playerSkillsSql = "CREATE TABLE IF NOT EXISTS player_skills (" +
+                        "uuid TEXT NOT NULL," +
+                        "skill_id TEXT NOT NULL," +
+                        "skill_level INTEGER NOT NULL DEFAULT 1," +
+                        "PRIMARY KEY (uuid, skill_id)," +
+                        "FOREIGN KEY(uuid) REFERENCES player_stats(uuid) ON DELETE CASCADE" +
+                        ");";
+                statement.execute(playerSkillsSql);
+            }
+
+            // --- Schema Migrations ---
+            // Add columns to player_stats table for both new and existing databases
+            // This handles updates from older plugin versions gracefully.
+            addColumnIfNotExists("player_stats", "level", "INTEGER NOT NULL DEFAULT 1");
+            addColumnIfNotExists("player_stats", "exp", "REAL NOT NULL DEFAULT 0.0");
+            addColumnIfNotExists("player_stats", "strength", "INTEGER NOT NULL DEFAULT 5");
+            addColumnIfNotExists("player_stats", "agility", "INTEGER NOT NULL DEFAULT 5");
+            addColumnIfNotExists("player_stats", "endurance", "INTEGER NOT NULL DEFAULT 5");
+            addColumnIfNotExists("player_stats", "skillPoints", "INTEGER NOT NULL DEFAULT 0");
 
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to create database tables!", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to create/update database tables!", e);
+        }
+    }
+
+    /**
+     * A helper method to add a column to a table if it does not already exist.
+     * This is used for database schema migrations.
+     *
+     * @param tableName        The name of the table to alter.
+     * @param columnName       The name of the column to add.
+     * @param columnDefinition The SQL definition of the new column (e.g., "INTEGER NOT NULL DEFAULT 0").
+     * @throws SQLException if a database access error occurs.
+     */
+    private void addColumnIfNotExists(String tableName, String columnName, String columnDefinition) throws SQLException {
+        try (ResultSet rs = connection.getMetaData().getColumns(null, null, tableName, columnName)) {
+            if (!rs.next()) {
+                // The column does not exist, so add it.
+                try (Statement stmt = connection.createStatement()) {
+                    stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDefinition);
+                    plugin.getLogger().info("Added column '" + columnName + "' to table '" + tableName + "'.");
+                }
+            }
         }
     }
 
@@ -543,13 +585,65 @@ public class SQLiteStorage implements Storage {
     @Override
     public CompletableFuture<Void> savePlayerStats(PlayerStats stats) {
         return CompletableFuture.runAsync(() -> {
-            String sql = "INSERT OR REPLACE INTO player_stats (uuid, endurance) VALUES (?, ?);";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, stats.getPlayerUUID().toString());
-                pstmt.setInt(2, stats.getEndurance());
-                pstmt.executeUpdate();
+            String playerUUID = stats.getPlayerUUID().toString();
+
+            // SQL statements
+            String saveStatsSql = "INSERT OR REPLACE INTO player_stats (uuid, level, exp, strength, agility, endurance, skillPoints) " +
+                                  "VALUES (?, ?, ?, ?, ?, ?, ?);";
+            String deleteSkillsSql = "DELETE FROM player_skills WHERE uuid = ?;";
+            String saveSkillSql = "INSERT INTO player_skills (uuid, skill_id, skill_level) VALUES (?, ?, ?);";
+
+            try {
+                // --- Transaction Start ---
+                connection.setAutoCommit(false);
+
+                // 1. Save the core player stats
+                try (PreparedStatement pstmt = connection.prepareStatement(saveStatsSql)) {
+                    pstmt.setString(1, playerUUID);
+                    pstmt.setInt(2, stats.getLevel());
+                    pstmt.setDouble(3, stats.getExp());
+                    pstmt.setInt(4, stats.getStrength());
+                    pstmt.setInt(5, stats.getAgility());
+                    pstmt.setInt(6, stats.getEndurance());
+                    pstmt.setInt(7, stats.getSkillPoints());
+                    pstmt.executeUpdate();
+                }
+
+                // 2. Delete old skills to prevent stale data
+                try (PreparedStatement pstmt = connection.prepareStatement(deleteSkillsSql)) {
+                    pstmt.setString(1, playerUUID);
+                    pstmt.executeUpdate();
+                }
+
+                // 3. Save new skills using a batch update
+                if (stats.getSkillLevels() != null && !stats.getSkillLevels().isEmpty()) {
+                    try (PreparedStatement pstmt = connection.prepareStatement(saveSkillSql)) {
+                        for (Map.Entry<String, Integer> entry : stats.getSkillLevels().entrySet()) {
+                            pstmt.setString(1, playerUUID);
+                            pstmt.setString(2, entry.getKey());
+                            pstmt.setInt(3, entry.getValue());
+                            pstmt.addBatch();
+                        }
+                        pstmt.executeBatch();
+                    }
+                }
+
+                // --- Transaction Commit ---
+                connection.commit();
+
             } catch (SQLException e) {
-                plugin.getLogger().log(Level.SEVERE, "Error saving player stats for " + stats.getPlayerUUID(), e);
+                plugin.getLogger().log(Level.SEVERE, "Error saving player stats for " + stats.getPlayerUUID() + ". Rolling back transaction.", e);
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackEx) {
+                    plugin.getLogger().log(Level.SEVERE, "Failed to rollback transaction for " + stats.getPlayerUUID(), rollbackEx);
+                }
+            } finally {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (SQLException e) {
+                    plugin.getLogger().log(Level.SEVERE, "Failed to reset auto-commit for " + stats.getPlayerUUID(), e);
+                }
             }
         });
     }
@@ -557,14 +651,30 @@ public class SQLiteStorage implements Storage {
     @Override
     public CompletableFuture<PlayerStats> loadPlayerStats(UUID playerUUID) {
         return CompletableFuture.supplyAsync(() -> {
-            String sql = "SELECT endurance FROM player_stats WHERE uuid = ?;";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            String statsSql = "SELECT * FROM player_stats WHERE uuid = ?;";
+            try (PreparedStatement pstmt = connection.prepareStatement(statsSql)) {
                 pstmt.setString(1, playerUUID.toString());
                 ResultSet rs = pstmt.executeQuery();
+
                 if (rs.next()) {
+                    // Player exists, create a stats object and populate it
                     PlayerStats stats = new PlayerStats(playerUUID);
+                    stats.setLevel(rs.getInt("level"));
+                    stats.setExp(rs.getDouble("exp"));
+                    stats.setStrength(rs.getInt("strength"));
+                    stats.setAgility(rs.getInt("agility"));
                     stats.setEndurance(rs.getInt("endurance"));
-                    // In the future, this is where you would load other stats like strength, agility, etc.
+                    stats.setSkillPoints(rs.getInt("skillPoints"));
+
+                    // Now load the skills
+                    String skillsSql = "SELECT skill_id, skill_level FROM player_skills WHERE uuid = ?;";
+                    try (PreparedStatement skillsPstmt = connection.prepareStatement(skillsSql)) {
+                        skillsPstmt.setString(1, playerUUID.toString());
+                        ResultSet skillsRs = skillsPstmt.executeQuery();
+                        while (skillsRs.next()) {
+                            stats.setSkillLevel(skillsRs.getString("skill_id"), skillsRs.getInt("skill_level"));
+                        }
+                    }
                     return stats;
                 } else {
                     // Player has no stats saved yet, return a fresh new PlayerStats object
