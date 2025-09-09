@@ -86,6 +86,7 @@ rpg:
   skill-max-level: "&cYou have already maxed out this skill."
   not-enough-skill-points: "&cYou do not have enough skill points."
   skill-unlock-required: "&cYou must unlock %skill_name% first."
+  dodge-message: "&7You dodged the attack!"
   gui:
     title: "Pohon Keahlian"
     stats-item:
